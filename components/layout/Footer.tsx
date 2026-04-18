@@ -85,7 +85,7 @@ export function Footer() {
   const socialLinks = getFooterSocialLinks();
 
   return (
-    <footer className="relative isolate mt-auto overflow-hidden border-t border-white/10">
+    <footer className="relative isolate mt-auto overflow-hidden border-t border-white/10 max-md:pb-[calc(5rem+env(safe-area-inset-bottom,0px))]">
       {/* Layered surface: deep burgundy base + highlights + fine grain */}
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(168deg,#4c1018_0%,#320a0f_42%,#180305_100%)]" aria-hidden />
       <div

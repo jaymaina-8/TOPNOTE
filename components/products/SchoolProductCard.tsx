@@ -8,6 +8,8 @@ import {
   catalogProductTitleClass,
   catalogTrustLineClass,
   catalogWhatsAppButtonClass,
+  catalogWhatsAppButtonLabelClass,
+  catalogWhatsAppGlyphClass,
   productCardArticleClass,
   productCardCatalogImageAreaClass,
   productCardImageClass,
@@ -43,7 +45,7 @@ export function SchoolProductCard({ product, sourcePage, className }: SchoolProd
             alt={product.name}
             fill
             className={productCardImageClass}
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            sizes="(max-width: 640px) 48vw, (max-width: 1024px) 50vw, 33vw"
           />
         ) : (
           <div
@@ -67,18 +69,18 @@ export function SchoolProductCard({ product, sourcePage, className }: SchoolProd
         </h3>
         <p className={catalogProductDescriptionClass}>{excerpt}</p>
 
-        <div className="mt-5 border-t border-neutral-100/90 pt-4 sm:mt-6">
-          <div className="rounded-xl bg-neutral-50/80 p-3.5 shadow-[var(--shadow-sm)] sm:p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">School unit price</p>
-                <p className="mt-1 text-xl font-bold tabular-nums tracking-tight text-positive">{formatKesPrice(schoolPrice)}</p>
+        <div className="mt-4 border-t border-neutral-100/90 pt-3 sm:mt-6 sm:pt-4">
+          <div className="rounded-xl bg-neutral-50/80 p-2.5 shadow-[var(--shadow-sm)] sm:p-4">
+            <div className="flex items-start justify-between gap-2 sm:gap-3">
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500 sm:text-[11px]">School unit price</p>
+                <p className="mt-1 text-lg font-bold tabular-nums tracking-tight text-positive sm:text-xl">{formatKesPrice(schoolPrice)}</p>
               </div>
-              <span className="shrink-0 rounded-full bg-positive-muted px-2.5 py-1 text-[11px] font-semibold text-positive">
+              <span className="shrink-0 rounded-full bg-positive-muted px-2 py-0.5 text-[10px] font-semibold text-positive sm:px-2.5 sm:py-1 sm:text-[11px]">
                 Save {formatKesPrice(savePerUnit)}
               </span>
             </div>
-            <p className="mt-2 text-sm text-neutral-500">
+            <p className="mt-1.5 text-xs text-neutral-500 sm:mt-2 sm:text-sm">
               <span className="text-neutral-500 line-through tabular-nums">{formatKesPrice(product.price)}</span>
               <span className="ml-2 text-neutral-500">list price</span>
             </p>
@@ -92,8 +94,8 @@ export function SchoolProductCard({ product, sourcePage, className }: SchoolProd
               className={catalogWhatsAppButtonClass}
             >
               <>
-                <WhatsAppOrderGlyph className="h-[1.125rem] w-[1.125rem] shrink-0 opacity-95" />
-                WhatsApp to order
+                <WhatsAppOrderGlyph className={catalogWhatsAppGlyphClass} />
+                <span className={catalogWhatsAppButtonLabelClass}>WhatsApp to order</span>
               </>
             </TrackedWhatsAppButton>
             <p className={catalogTrustLineClass}>Quick replies during business hours</p>

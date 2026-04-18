@@ -29,34 +29,40 @@ export function FloatingActions() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  /** Mobile: inset from edges + sit above home-indicator; desktop keeps slightly roomier offsets. */
+  const safeLeft = "left-[max(1.25rem,env(safe-area-inset-left))]";
+  const safeRight = "right-[max(1.25rem,env(safe-area-inset-right))]";
+  const edgeBottom =
+    "bottom-[max(1.25rem,calc(0.75rem+env(safe-area-inset-bottom,0px)))] md:bottom-[max(1.5rem,calc(1rem+env(safe-area-inset-bottom,0px)))]";
+
   return (
     <>
       <button
         type="button"
         onClick={scrollToTop}
-        className={`fixed bottom-5 left-5 z-50 flex h-12 w-12 items-center justify-center rounded-full border-2 border-primary/70 bg-neutral-950 text-white shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition-[opacity,transform,box-shadow,background-color,border-color] duration-300 hover:-translate-y-0.5 hover:border-primary hover:bg-primary hover:shadow-xl active:translate-y-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:bottom-6 md:left-6 ${
+        className={`fixed z-[90] flex h-11 w-11 items-center justify-center rounded-full border-2 border-primary/70 bg-neutral-950 text-white shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition-[opacity,transform,box-shadow,background-color,border-color] duration-300 hover:-translate-y-0.5 hover:border-primary hover:bg-primary hover:shadow-xl active:translate-y-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:h-12 md:w-12 ${edgeBottom} ${safeLeft} ${
           showBackToTop ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-2 opacity-0"
         }`}
         aria-label="Back to top"
         tabIndex={showBackToTop ? 0 : -1}
       >
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
+        <svg className="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
           <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
         </svg>
       </button>
 
       <div
-        className="fixed bottom-5 right-5 z-50 shadow-[0_8px_24px_rgba(15,23,42,0.18)] sm:bottom-6 sm:right-6"
+        className={`fixed z-[100] shadow-[0_8px_24px_rgba(15,23,42,0.18)] ${edgeBottom} ${safeRight}`}
         aria-live="polite"
       >
         <TrackedWhatsAppButton
           message={WHATSAPP_MESSAGES.order}
           variant="primary"
           sourcePage="/floating-whatsapp"
-          className="h-14 w-14 min-w-14 shrink-0 rounded-full border-0 p-0 !bg-[#25D366] !text-white shadow-none hover:!bg-[#20bd5c] hover:!text-white active:!bg-[#1da851] focus-visible:!outline-[#25D366]"
+          className="h-12 w-12 min-w-12 shrink-0 rounded-full border-0 p-0 !bg-[#25D366] !text-white shadow-none hover:!bg-[#20bd5c] hover:!text-white active:!bg-[#1da851] focus-visible:!outline-[#25D366] md:h-14 md:w-14 md:min-w-14"
         >
           <span className="sr-only">Order on WhatsApp</span>
-          <WhatsAppIcon className="h-7 w-7" />
+          <WhatsAppIcon className="h-6 w-6 md:h-7 md:w-7" />
         </TrackedWhatsAppButton>
       </div>
     </>

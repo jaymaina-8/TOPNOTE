@@ -13,7 +13,7 @@ export default function SiteLayout({
   return (
     <>
       <Navbar />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 max-md:pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))]">{children}</main>
       <Footer />
       <FloatingActions />
     </>

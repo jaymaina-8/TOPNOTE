@@ -15,6 +15,8 @@ import {
   catalogTrustLineCompactClass,
   catalogWhatsAppButtonClass,
   catalogWhatsAppButtonCompactClass,
+  catalogWhatsAppButtonLabelClass,
+  catalogWhatsAppGlyphClass,
   productCardArticleClass,
   productCardCatalogImageAreaClass,
   productCardImageClass,
@@ -59,7 +61,7 @@ export function ProductCard({ product, sourcePage, className, density = "default
 
   const imageSizes = isCompact
     ? "(max-width: 640px) 48vw, (max-width: 1024px) 25vw, 20vw"
-    : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw";
+    : "(max-width: 640px) 48vw, (max-width: 1024px) 50vw, 33vw";
 
   return (
     <article className={cn(productCardArticleClass, className)}>
@@ -99,8 +101,8 @@ export function ProductCard({ product, sourcePage, className, density = "default
         <p className={descriptionClass}>{excerpt}</p>
         <div
           className={cn(
-            "border-t border-neutral-100/90 pt-4",
-            isCompact ? "mt-3 sm:mt-5" : "mt-5 sm:mt-6",
+            "border-t border-neutral-100/90",
+            isCompact ? "mt-3 pt-4 sm:mt-5" : "mt-4 pt-3 sm:mt-6 sm:pt-4",
           )}
         >
           <p className={priceClass}>{formatKesPrice(product.price)}</p>
@@ -113,10 +115,8 @@ export function ProductCard({ product, sourcePage, className, density = "default
               className={waClass}
             >
               <>
-                <WhatsAppOrderGlyph
-                  className={cn("shrink-0 opacity-95", isCompact ? "h-4 w-4 max-sm:h-3.5 max-sm:w-3.5" : "h-[1.125rem] w-[1.125rem]")}
-                />
-                WhatsApp to order
+                <WhatsAppOrderGlyph className={catalogWhatsAppGlyphClass} />
+                <span className={catalogWhatsAppButtonLabelClass}>WhatsApp to order</span>
               </>
             </TrackedWhatsAppButton>
             <p className={trustClass}>Quick replies during business hours</p>

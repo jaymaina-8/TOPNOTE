@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 
 import { ProductCard } from "@/components/products/ProductCard";
 import { ParentProductCard } from "@/components/products/ParentProductCard";
@@ -101,11 +101,6 @@ export function CatalogWithFilters({
       {} as Record<string, ProductWithCategory[]>,
     );
   }, [filtered]);
-
-  useEffect(() => {
-    console.log("sortedCategories", sortedCategories.map((c) => c.slug));
-    console.log("grouped keys", Object.keys(groupedProducts));
-  }, [sortedCategories, groupedProducts]);
 
   const knownCategorySlugs = useMemo(
     () => new Set(sortedCategories.map((c) => c.slug)),

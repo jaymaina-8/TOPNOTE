@@ -9,6 +9,8 @@ import {
   catalogProductTitleClass,
   catalogTrustLineClass,
   catalogWhatsAppButtonClass,
+  catalogWhatsAppButtonLabelClass,
+  catalogWhatsAppGlyphClass,
   productCardArticleClass,
   productCardCatalogImageAreaClass,
   productCardImageClass,
@@ -41,7 +43,7 @@ export function ParentProductCard({ product, sourcePage, className }: ParentProd
             alt={product.name}
             fill
             className={productCardImageClass}
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            sizes="(max-width: 640px) 48vw, (max-width: 1024px) 50vw, 33vw"
           />
         ) : (
           <div
@@ -64,8 +66,8 @@ export function ParentProductCard({ product, sourcePage, className }: ParentProd
           </Link>
         </h3>
         <p className={catalogProductDescriptionClass}>{excerpt}</p>
-        <div className="mt-5 border-t border-neutral-100/90 pt-4 sm:mt-6">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">Retail / cover price</p>
+        <div className="mt-4 border-t border-neutral-100/90 pt-3 sm:mt-6 sm:pt-4">
+          <p className="text-[10px] font-medium uppercase tracking-wide text-neutral-500 sm:text-[11px]">Retail / cover price</p>
           <p className={cn("mt-1", catalogPriceClass)}>{formatKesPrice(product.price)}</p>
           <div className="mt-3.5 sm:mt-3">
             <TrackedWhatsAppButton
@@ -76,8 +78,8 @@ export function ParentProductCard({ product, sourcePage, className }: ParentProd
               className={catalogWhatsAppButtonClass}
             >
               <>
-                <WhatsAppOrderGlyph className="h-[1.125rem] w-[1.125rem] shrink-0 opacity-95" />
-                WhatsApp to order
+                <WhatsAppOrderGlyph className={catalogWhatsAppGlyphClass} />
+                <span className={catalogWhatsAppButtonLabelClass}>WhatsApp to order</span>
               </>
             </TrackedWhatsAppButton>
             <p className={catalogTrustLineClass}>Quick replies during business hours</p>
