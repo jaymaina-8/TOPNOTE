@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { ProductCard } from "@/components/products/ProductCard";
 import { ParentProductCard } from "@/components/products/ParentProductCard";
@@ -9,6 +9,21 @@ import { catalogProductGridClass } from "@/components/products/productCardClasse
 import { sortCategoriesByDisplayOrder } from "@/lib/categories/display-order";
 import { cn } from "@/lib/utils";
 import type { CategoryRow, CategoryType, ProductWithCategory } from "@/lib/supabase/types";
+
+function gradeSortKey(grade: string | null): number {
+  if (grade == null || grade.trim() === "") return 10_000;
+  const match = grade.match(/\d+/);
+  return match ? parseInt(match[0], 10) : 10_000;
+}
+
+/** Within a single category: grade first, then name (never mix category order). */
+function sortProductsWithinCategory(products: ProductWithCategory[]): ProductWithCategory[] {
+  return [...products].sort((a, b) => {
+    const diff = gradeSortKey(a.grade) - gradeSortKey(b.grade);
+    if (diff !== 0) return diff;
+    return a.name.localeCompare(b.name);
+  });
+}
 
 function productMatchesSearch(product: ProductWithCategory, q: string): boolean {
   const trimmed = q.trim();
@@ -33,6 +48,24 @@ export type CatalogWithFiltersProps = {
   className?: string;
 };
 
+function ListingCard({
+  product,
+  variant,
+  sourcePage,
+}: {
+  product: ProductWithCategory;
+  variant: CatalogWithFiltersProps["variant"];
+  sourcePage: string;
+}) {
+  if (variant === "product") {
+    return <ProductCard product={product} sourcePage={sourcePage} />;
+  }
+  if (variant === "parent") {
+    return <ParentProductCard product={product} sourcePage={sourcePage} />;
+  }
+  return <SchoolProductCard product={product} sourcePage={sourcePage} />;
+}
+
 export function CatalogWithFilters({
   products,
   categories,
@@ -56,6 +89,34 @@ export function CatalogWithFilters({
   }, [products, query, selectedType]);
 
   const sortedCategories = useMemo(() => sortCategoriesByDisplayOrder(categories), [categories]);
+
+  const groupedProducts = useMemo(() => {
+    return filtered.reduce(
+      (acc, product) => {
+        const key = product.categories?.slug ?? "uncategorized";
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(product);
+        return acc;
+      },
+      {} as Record<string, ProductWithCategory[]>,
+    );
+  }, [filtered]);
+
+  useEffect(() => {
+    console.log("sortedCategories", sortedCategories.map((c) => c.slug));
+    console.log("grouped keys", Object.keys(groupedProducts));
+  }, [sortedCategories, groupedProducts]);
+
+  const knownCategorySlugs = useMemo(
+    () => new Set(sortedCategories.map((c) => c.slug)),
+    [sortedCategories],
+  );
+
+  const extraGroupSlugs = useMemo(() => {
+    return Object.keys(groupedProducts)
+      .filter((slug) => !knownCategorySlugs.has(slug))
+      .sort((a, b) => a.localeCompare(b));
+  }, [groupedProducts, knownCategorySlugs]);
 
   return (
     <div className={cn("mt-6 space-y-9 md:mt-8 md:space-y-10", className)}>
@@ -126,19 +187,53 @@ export function CatalogWithFilters({
           No products match your search or category. Try another keyword or choose &quot;All&quot;.
         </p>
       ) : (
-        <ul className={catalogProductGridClass}>
-          {filtered.map((product) => (
-            <li key={product.id}>
-              {variant === "product" ? (
-                <ProductCard product={product} sourcePage={sourcePage} />
-              ) : variant === "parent" ? (
-                <ParentProductCard product={product} sourcePage={sourcePage} />
-              ) : (
-                <SchoolProductCard product={product} sourcePage={sourcePage} />
-              )}
-            </li>
-          ))}
-        </ul>
+        <div className="space-y-10 md:space-y-12">
+          {sortedCategories.map((category) => {
+            const rawItems = groupedProducts[category.slug] ?? [];
+            const items = sortProductsWithinCategory(rawItems);
+            if (items.length === 0) return null;
+            return (
+              <section key={category.slug} className="space-y-4 md:space-y-5" aria-labelledby={`catalog-heading-${category.slug}`}>
+                <h2
+                  id={`catalog-heading-${category.slug}`}
+                  className="text-lg font-bold tracking-tight text-neutral-900 md:text-xl"
+                >
+                  {category.name}
+                </h2>
+                <ul className={catalogProductGridClass}>
+                  {items.map((product) => (
+                    <li key={product.id}>
+                      <ListingCard product={product} variant={variant} sourcePage={sourcePage} />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            );
+          })}
+          {extraGroupSlugs.map((slug) => {
+            const rawItems = groupedProducts[slug] ?? [];
+            const items = sortProductsWithinCategory(rawItems);
+            if (items.length === 0) return null;
+            const title = slug === "uncategorized" ? "Other products" : slug;
+            return (
+              <section key={slug} className="space-y-4 md:space-y-5" aria-labelledby={`catalog-heading-extra-${slug}`}>
+                <h2
+                  id={`catalog-heading-extra-${slug}`}
+                  className="text-lg font-bold tracking-tight text-neutral-900 md:text-xl"
+                >
+                  {title}
+                </h2>
+                <ul className={catalogProductGridClass}>
+                  {items.map((product) => (
+                    <li key={product.id}>
+                      <ListingCard product={product} variant={variant} sourcePage={sourcePage} />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            );
+          })}
+        </div>
       )}
     </div>
   );
