@@ -1,0 +1,106 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+
+:root {
+  --background: var(--surface-page);
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--foreground-muted);
+  --color-primary: var(--brand-primary);
+  --color-primary-foreground: var(--brand-primary-foreground);
+  --color-surface-muted: var(--surface-muted);
+  --color-border: var(--border);
+  --color-positive: var(--semantic-positive);
+  --color-positive-muted: var(--semantic-positive-muted);
+  --color-positive-border: var(--semantic-positive-border);
+  --font-sans: var(--font-inter);
+  --shadow-card: var(--shadow-sm);
+  --shadow-card-hover: var(--shadow-md);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--brand-primary) 18%, transparent);
+  color: var(--foreground);
+}
+
+/**
+ * Hero book carousel — desktop: large transform scale + wide spread in markup.
+ * Mobile: separate class so huge desktop scale never applies below `lg`.
+ */
+.hero-books-composition-scale {
+  transform: scale(1.8) translateY(-10px);
+  transform-origin: center center;
+  will-change: transform;
+}
+
+@media (min-width: 1280px) {
+  .hero-books-composition-scale {
+    transform: scale(1.85) translateY(-12px);
+  }
+}
+
+@media (min-width: 1536px) {
+  .hero-books-composition-scale {
+    transform: scale(1.9) translateY(-14px);
+  }
+}
+
+.hero-books-mobile-scale {
+  transform: scale(1.3) translateY(-4px);
+  transform-origin: center center;
+  will-change: transform;
+}
+
+@media (max-width: 768px) {
+  .hero-books-mobile-scale {
+    transform: scale(1.22) translateY(-2px);
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .hero-books-mobile-scale {
+    transform: scale(1.34) translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-books-composition-scale,
+  .hero-books-mobile-scale {
+    will-change: auto;
+  }
+}
+
+/** Shared baseline for hero 3-book row — bottoms align; optional ground ellipse. */
+.hero-books-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  position: relative;
+  isolation: isolate;
+}
+
+.hero-books-row::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  width: 60%;
+  height: 20px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.08);
+  filter: blur(10px);
+  pointer-events: none;
+  z-index: 0;
+}
+
