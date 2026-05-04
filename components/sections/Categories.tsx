@@ -52,7 +52,6 @@ function CategoryIcon({ slug }: { slug: string }) {
   }
 }
 
-/** Maps home content slug to `?category=` value (matches DB `CategoryType`). */
 function productsCategoryParam(slug: string): string {
   if (slug === "lab-equipment") return "lab";
   return slug;
@@ -63,25 +62,25 @@ export function Categories() {
     <Section surface="muted">
       <Container>
         <SectionHeading
-          title="Find What You Need — Fast"
-          description="Books, exams, and supplies — ready for quick delivery."
+          title="A complete learning supply house"
+          description="Books, exams, stationery and lab supplies curated for Kenyan schools and families."
         />
         <ul className="mt-10 grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4 md:mt-12">
           {categories.map((cat) => (
             <li key={cat.slug} className="flex">
               <Link
                 href={`/products?category=${productsCategoryParam(cat.slug)}`}
-                className="group flex h-full w-full cursor-pointer flex-col rounded-2xl bg-white p-7 shadow-[var(--shadow-sm)] transition-[transform,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:scale-[1.02] hover:shadow-[var(--shadow-md)]"
+                className="group relative flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-primary/10 bg-white p-7 shadow-[var(--shadow-sm)] transition-[transform,box-shadow,border-color] duration-300 ease-out before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-primary hover:-translate-y-1 hover:border-primary/25 hover:shadow-[var(--shadow-md)]"
               >
                 <div
-                  className="mb-5 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white shadow-[var(--shadow-sm)] ring-1 ring-neutral-200/80"
+                  className="mb-5 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 shadow-[var(--shadow-sm)] ring-1 ring-primary/15"
                   aria-hidden
                 >
                   <CategoryIcon slug={cat.slug} />
                 </div>
                 <h3 className="font-semibold leading-snug text-neutral-900 group-hover:text-primary">{cat.name}</h3>
                 <span className="mt-auto pt-5 text-sm font-medium text-primary transition-colors group-hover:text-primary/90">
-                  View Products →
+                  View products &rarr;
                 </span>
               </Link>
             </li>

@@ -25,24 +25,27 @@ export function PageIntro({
   return (
     <header
       className={cn(
+        "publisher-page-intro",
         align === "center" && "mx-auto max-w-2xl text-center",
         align === "left" && "max-w-2xl",
         className,
       )}
     >
       {eyebrow ? (
-        <p className="text-xs font-semibold uppercase tracking-wider text-primary">{eyebrow}</p>
+        <p className="inline-flex rounded-full border border-primary/15 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary shadow-[var(--shadow-sm)]">
+          {eyebrow}
+        </p>
       ) : null}
       <h1
         className={cn(
-          "text-balance text-3xl font-bold tracking-tight text-neutral-900 md:text-4xl",
-          eyebrow && "mt-2",
+          "text-balance text-3xl font-bold tracking-tight text-neutral-950 md:text-4xl lg:text-5xl",
+          eyebrow && "mt-4",
         )}
       >
         {title}
       </h1>
       {subtitle ? (
-        <p className="mt-2 text-sm font-semibold text-neutral-800 md:text-base">{subtitle}</p>
+        <p className="mt-3 text-sm font-semibold text-primary md:text-base">{subtitle}</p>
       ) : null}
       {description ? (
         <p className="mt-4 text-pretty text-base leading-relaxed text-neutral-600 md:text-lg">{description}</p>

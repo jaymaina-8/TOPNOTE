@@ -13,20 +13,18 @@ export const categories: CategoryItem[] = [
 export const howItWorksSteps = [
   {
     step: 1,
-    title: "Choose your books & supplies",
-    description:
-      "Browse revision books, exams, stationery, and lab supplies for your needs.",
+    title: "Choose your books and supplies",
+    description: "Browse curriculum books, exams, stationery and lab supplies for home or school.",
   },
   {
     step: 2,
     title: "Send your order on WhatsApp",
-    description:
-      "Tell us what you need and we’ll confirm availability, pricing, and next steps.",
+    description: "Tell us what you need and we will confirm availability, pricing and the next steps.",
   },
   {
     step: 3,
     title: "Confirm and receive delivery",
-    description: "Approve your order details and we’ll arrange delivery to your location.",
+    description: "Approve your order details and we will arrange delivery to your location in Kenya.",
   },
 ] as const;
 
@@ -37,19 +35,19 @@ export type WhyChooseUsItem = {
 
 export const whyChooseUs: readonly WhyChooseUsItem[] = [
   {
-    title: "CBC-aligned materials for all grades",
-    subtext: "Carefully selected books that match the Kenyan curriculum.",
+    title: "CBC-focused materials for Kenyan learners",
+    subtext: "Carefully selected books and practice resources for classroom and home study.",
   },
   {
     title: "Reliable nationwide delivery",
-    subtext: "We deliver across Kenya — fast and dependable.",
+    subtext: "We help schools and families source materials quickly across Kenya.",
   },
   {
-    title: "Quick WhatsApp support",
-    subtext: "Get replies fast and place your order without delays.",
+    title: "Fast WhatsApp support",
+    subtext: "Get stock checks, pricing and order guidance without long back-and-forth.",
   },
   {
     title: "Trusted by schools and parents",
-    subtext: "Supplying learning materials to schools and families across Kenya.",
+    subtext: "A dependable partner for termly learning materials and bulk school supply.",
   },
 ];

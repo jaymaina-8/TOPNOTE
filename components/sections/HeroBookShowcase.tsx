@@ -281,17 +281,14 @@ export function HeroBookShowcase({ className }: { className?: string }) {
         return;
       }
       transitioningRef.current = true;
+      setPairPhase(false);
       setPair({ from: visible, to: nextIndex });
     },
     [count, visible, reducedMotion],
   );
 
   useLayoutEffect(() => {
-    if (!pair) {
-      setPairPhase(false);
-      return;
-    }
-    setPairPhase(false);
+    if (!pair) return;
     const id = requestAnimationFrame(() => {
       requestAnimationFrame(() => setPairPhase(true));
     });
@@ -303,6 +300,7 @@ export function HeroBookShowcase({ className }: { className?: string }) {
     const id = window.setTimeout(() => {
       setVisible(pair.to);
       setPair(null);
+      setPairPhase(false);
       transitioningRef.current = false;
     }, TRANSITION_MS);
     return () => window.clearTimeout(id);
@@ -334,12 +332,6 @@ export function HeroBookShowcase({ className }: { className?: string }) {
 
   const navDisabled = !!pair;
 
-  /** Only render arrow controls after mount so SSR and first client paint match (avoids hydration noise). */
-  const [clientNav, setClientNav] = useState(false);
-  useEffect(() => {
-    setClientNav(true);
-  }, []);
-
   return (
     <div
       role="region"
@@ -348,22 +340,18 @@ export function HeroBookShowcase({ className }: { className?: string }) {
       className={cn("relative w-full min-w-0 overflow-visible bg-white", className)}
     >
       <div className={CAROUSEL_STAGE_CLASS}>
-        {clientNav ? (
-          <>
-            <ShowcaseNavArrow
-              direction="prev"
-              label="Previous slide"
-              disabled={navDisabled}
-              onClick={goPrev}
-            />
-            <ShowcaseNavArrow
-              direction="next"
-              label="Next slide"
-              disabled={navDisabled}
-              onClick={goNextManual}
-            />
-          </>
-        ) : null}
+        <ShowcaseNavArrow
+          direction="prev"
+          label="Previous slide"
+          disabled={navDisabled}
+          onClick={goPrev}
+        />
+        <ShowcaseNavArrow
+          direction="next"
+          label="Next slide"
+          disabled={navDisabled}
+          onClick={goNextManual}
+        />
 
         {!pair && (
           <div key={`idle-${visible}`} className="relative w-full">

@@ -9,7 +9,7 @@ export function WhyChooseUs() {
   return (
     <Section surface="canvas">
       <Container>
-        <SectionHeading title="Why choose us" description="Built for Kenyan learners and educators." />
+        <SectionHeading title="Why schools choose TOPNOTE" description="A publisher and supply partner built for Kenyan learners and educators." />
         <div className="mx-auto mt-5 flex max-w-2xl flex-wrap justify-center gap-2 md:mt-6">
           {TRUST_BADGES.map((label) => (
             <span
@@ -24,7 +24,7 @@ export function WhyChooseUs() {
           {whyChooseUs.map((item) => (
             <li
               key={item.title}
-              className="flex items-start gap-3.5 rounded-2xl bg-white p-5 shadow-[var(--shadow-sm)] transition-[transform,box-shadow] duration-200 md:hover:-translate-y-1 md:hover:shadow-[var(--shadow-md)]"
+              className="flex items-start gap-3.5 rounded-2xl border border-primary/10 bg-white p-5 shadow-[var(--shadow-sm)] transition-[transform,box-shadow,border-color] duration-200 md:hover:-translate-y-1 md:hover:border-primary/25 md:hover:shadow-[var(--shadow-md)]"
             >
               <span
                 className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary"

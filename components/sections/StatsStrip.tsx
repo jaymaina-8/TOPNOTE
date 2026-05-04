@@ -37,30 +37,30 @@ export function StatsStrip() {
     <Section
       ref={sectionRef}
       surface="canvas"
-      className="border-b border-neutral-200/80 bg-neutral-50/50 py-14 md:py-16 lg:py-20"
+      className="border-b border-primary/10 bg-white py-10 md:py-12 lg:py-14"
     >
       <Container>
-        <div className="mx-auto max-w-6xl">
-          <ul className="grid grid-cols-2 gap-x-6 gap-y-12 sm:gap-x-8 md:gap-y-14 lg:grid-cols-4 lg:gap-x-10 lg:gap-y-0">
+        <div className="mx-auto max-w-6xl rounded-[1.75rem] border border-primary/10 bg-primary px-5 py-8 shadow-[var(--shadow-premium)] md:px-8 md:py-10">
+          <ul className="grid grid-cols-2 gap-x-6 gap-y-10 sm:gap-x-8 md:gap-y-12 lg:grid-cols-4 lg:gap-x-10 lg:gap-y-0">
             {STATS_STRIP_ITEMS.map((item) => (
               <li key={item.label} className="flex flex-col text-center">
                 <div className="flex min-h-[3.25rem] items-baseline justify-center gap-0.5 sm:min-h-[3.5rem] md:min-h-[4rem]">
-                  <span className="text-[clamp(1.75rem,5vw,2.75rem)] font-bold leading-none tracking-tight text-primary">
+                  <span className="text-[clamp(1.75rem,5vw,2.75rem)] font-bold leading-none tracking-tight text-white">
                     <AnimatedStatValue
                       target={item.value}
                       active={animationActive}
                       prefersReducedMotion={prefersReducedMotion}
                     />
                   </span>
-                  <span className="text-[clamp(1.125rem,3vw,1.75rem)] font-bold leading-none text-primary">
+                  <span className="text-[clamp(1.125rem,3vw,1.75rem)] font-bold leading-none text-white">
                     {item.suffix}
                   </span>
                 </div>
-                <p className="mt-4 text-[0.65rem] font-semibold uppercase leading-snug tracking-[0.12em] text-neutral-700 sm:text-xs">
+                <p className="mt-4 text-[0.65rem] font-semibold uppercase leading-snug tracking-[0.12em] text-white/78 sm:text-xs">
                   {item.label}
                 </p>
                 <div
-                  className="mx-auto mt-3 h-[2px] w-[60px] shrink-0 bg-primary sm:mt-4"
+                  className="mx-auto mt-3 h-[2px] w-[60px] shrink-0 bg-white/70 sm:mt-4"
                   aria-hidden
                 />
               </li>

@@ -5,6 +5,17 @@ import { cookies } from "next/headers";
 import type { Database } from "./types";
 import { getSupabaseEnv } from "./env";
 
+async function safeSupabaseFetch(...args: Parameters<typeof fetch>): Promise<Response> {
+  try {
+    return await fetch(...args);
+  } catch {
+    return Response.json(
+      { message: "Supabase is unavailable" },
+      { status: 503, statusText: "Service Unavailable" },
+    );
+  }
+}
+
 /**
  * Supabase client for Server Components, Server Actions, and Route Handlers.
  * Cookie handling supports future Auth; safe to ignore `setAll` errors in RSC.
@@ -19,6 +30,9 @@ export async function createClient(): Promise<SupabaseClient<Database> | null> {
   const cookieStore = await cookies();
 
   return createServerClient<Database>(url, anonKey, {
+    global: {
+      fetch: safeSupabaseFetch,
+    },
     cookies: {
       getAll() {
         return cookieStore.getAll();

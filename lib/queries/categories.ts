@@ -1,20 +1,24 @@
 import { sortCategoriesByDisplayOrder } from "@/lib/categories/display-order";
+import { fallbackCategories, getFallbackCategoriesByTypes } from "@/lib/content/catalogFallback";
 import { createClient } from "@/lib/supabase/server";
 import type { CategoryRow, CategoryType } from "@/lib/supabase/types";
 
 export async function getCategories(): Promise<CategoryRow[]> {
   const supabase = await createClient();
-  if (!supabase) return [];
-  const { data, error } = await supabase
-    .from("categories")
-    .select("*")
-    .order("name", { ascending: true });
+  if (!supabase) return fallbackCategories;
 
-  if (error) {
-    throw new Error(`getCategories: ${error.message}`);
+  try {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("*")
+      .order("name", { ascending: true });
+
+    if (error) return fallbackCategories;
+
+    return data ?? [];
+  } catch {
+    return fallbackCategories;
   }
-
-  return data ?? [];
 }
 
 /**
@@ -23,17 +27,19 @@ export async function getCategories(): Promise<CategoryRow[]> {
  */
 export async function getCategoriesByTypes(types: readonly CategoryType[]): Promise<CategoryRow[]> {
   const supabase = await createClient();
-  if (!supabase || types.length === 0) return [];
-  const { data, error } = await supabase.from("categories").select("*").in("type", [...types]);
+  if (types.length === 0) return [];
+  if (!supabase) return getFallbackCategoriesByTypes(types);
 
-  if (error) {
-    throw new Error(`getCategoriesByTypes: ${error.message}`);
+  try {
+    const { data, error } = await supabase.from("categories").select("*").in("type", [...types]);
+
+    if (error) return getFallbackCategoriesByTypes(types);
+
+    const allowed = new Set(types);
+    const rows = (data ?? []).filter((c) => allowed.has(c.type));
+
+    return sortCategoriesByDisplayOrder(rows);
+  } catch {
+    return getFallbackCategoriesByTypes(types);
   }
-
-  const allowed = new Set(types);
-  const rows = (data ?? []).filter((c) => allowed.has(c.type));
-
-  console.log(rows.map((c) => c.slug));
-
-  return sortCategoriesByDisplayOrder(rows);
 }

@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 
 /** Shared presentation for public product cards (visual consistency). */
 export const productCardArticleClass =
-  "group flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-[var(--shadow-sm)] transition-[box-shadow] duration-200 hover:shadow-[var(--shadow-md)]";
+  "group flex h-full flex-col overflow-hidden rounded-2xl border border-primary/10 bg-white shadow-[var(--shadow-sm)] transition-[box-shadow,border-color] duration-200 hover:border-primary/25 hover:shadow-[var(--shadow-md)]";
 
 export const productCardCatalogImageAreaClass =
   "relative block aspect-[5/3] overflow-hidden bg-neutral-50 outline-none ring-primary focus-visible:ring-2 focus-visible:ring-offset-2 sm:aspect-[4/3]";

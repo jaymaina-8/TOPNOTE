@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useId, useState } from "react";
+import { CartLinkBadge } from "@/components/cart/CartLinkBadge";
 import { TrackedWhatsAppButton } from "@/components/ctas/TrackedCtas";
 import { Container } from "@/components/ui/Container";
 import { LOGO_SRC, SITE_NAME } from "@/lib/site";
@@ -14,6 +15,7 @@ const navLinks = [
   { href: "/products", label: "Products" },
   { href: "/for-parents", label: "For Parents" },
   { href: "/for-schools", label: "For Schools" },
+  { href: "/cart", label: "Cart" },
   { href: "/contact", label: "Contact" },
 ] as const;
 
@@ -22,7 +24,7 @@ export function Navbar() {
   const panelId = useId();
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 shadow-[0_1px_0_rgba(15,23,42,0.06)] backdrop-blur-md supports-[backdrop-filter]:bg-white/90">
+    <header className="sticky top-0 z-50 border-b border-primary/10 bg-white/95 shadow-[0_10px_30px_rgba(127,7,18,0.06)] backdrop-blur-md supports-[backdrop-filter]:bg-white/90">
       <Container className="flex min-h-[3.25rem] max-w-none items-center justify-between gap-3 px-2.5 py-1 sm:px-4 sm:py-1.5 md:min-h-[3.75rem] md:py-2 lg:py-1.5 lg:pl-2 lg:pr-10 xl:pl-3 xl:pr-12">
         <Link
           href="/"
@@ -46,9 +48,10 @@ export function Navbar() {
             <Link
               key={href}
               href={href}
-              className="rounded-lg px-3.5 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
+              className="rounded-lg px-3.5 py-2 text-sm font-semibold text-neutral-600 transition-colors hover:bg-primary/10 hover:text-primary"
             >
               {label}
+              {href === "/cart" ? <CartLinkBadge /> : null}
             </Link>
           ))}
         </nav>
@@ -61,7 +64,7 @@ export function Navbar() {
 
         <button
           type="button"
-          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl bg-neutral-100 text-neutral-800 shadow-[var(--shadow-sm)] transition-colors hover:bg-neutral-200/80 md:hidden"
+          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-[var(--shadow-sm)] transition-colors hover:bg-primary/15 md:hidden"
           aria-expanded={open}
           aria-controls={panelId}
           aria-label={open ? "Close menu" : "Open menu"}
@@ -96,6 +99,7 @@ export function Navbar() {
               onClick={() => setOpen(false)}
             >
               {label}
+              {href === "/cart" ? <CartLinkBadge /> : null}
             </Link>
           ))}
           <div className="pt-3">

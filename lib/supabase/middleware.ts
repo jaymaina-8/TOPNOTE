@@ -5,6 +5,17 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "./types";
 import { getSupabaseEnv } from "./env";
 
+async function safeSupabaseFetch(...args: Parameters<typeof fetch>): Promise<Response> {
+  try {
+    return await fetch(...args);
+  } catch {
+    return Response.json(
+      { message: "Supabase is unavailable" },
+      { status: 503, statusText: "Service Unavailable" },
+    );
+  }
+}
+
 export type UpdateSessionResult = {
   response: NextResponse;
   user: User | null;
@@ -23,6 +34,9 @@ export async function updateSession(request: NextRequest): Promise<UpdateSession
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient<Database>(url, anonKey, {
+    global: {
+      fetch: safeSupabaseFetch,
+    },
     cookies: {
       getAll() {
         return request.cookies.getAll();

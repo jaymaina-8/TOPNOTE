@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { TrackedWhatsAppButton } from "@/components/ctas/TrackedCtas";
+import { AddToCartButton } from "@/components/cart/AddToCartButton";
 import {
   catalogCardBodyClass,
   catalogCategoryLabelClass,
@@ -8,17 +8,13 @@ import {
   catalogProductTitleClass,
   catalogTrustLineClass,
   catalogWhatsAppButtonClass,
-  catalogWhatsAppButtonLabelClass,
-  catalogWhatsAppGlyphClass,
   productCardArticleClass,
   productCardCatalogImageAreaClass,
   productCardImageClass,
 } from "@/components/products/productCardClasses";
-import { WhatsAppOrderGlyph } from "@/components/products/WhatsAppOrderGlyph";
 import { excerptText, formatKesPrice } from "@/lib/format";
 import { getDiscountAmount, getSchoolPrice } from "@/lib/pricing";
 import type { ProductWithCategory } from "@/lib/supabase/types";
-import { schoolProductWhatsAppMessage } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
 
 const CARD_DESCRIPTION_FALLBACK = "Ask us for details on WhatsApp.";
@@ -29,7 +25,7 @@ export type SchoolProductCardProps = {
   className?: string;
 };
 
-export function SchoolProductCard({ product, sourcePage, className }: SchoolProductCardProps) {
+export function SchoolProductCard({ product, className }: SchoolProductCardProps) {
   const categoryName = product.categories?.name ?? "Catalog";
   const href = `/products/${product.slug}`;
   const excerpt = excerptText(product.description, 120, CARD_DESCRIPTION_FALLBACK);
@@ -86,19 +82,19 @@ export function SchoolProductCard({ product, sourcePage, className }: SchoolProd
             </p>
           </div>
           <div className="mt-3.5 sm:mt-3">
-            <TrackedWhatsAppButton
-              message={schoolProductWhatsAppMessage(product.name)}
-              sourcePage={sourcePage}
-              sourceProductId={product.id}
-              variant="primary"
+            <AddToCartButton
+              item={{
+                id: product.id,
+                name: product.name,
+                slug: product.slug,
+                price: schoolPrice,
+                imageUrl: product.image_url,
+                categoryName,
+              }}
               className={catalogWhatsAppButtonClass}
-            >
-              <>
-                <WhatsAppOrderGlyph className={catalogWhatsAppGlyphClass} />
-                <span className={catalogWhatsAppButtonLabelClass}>WhatsApp to order</span>
-              </>
-            </TrackedWhatsAppButton>
-            <p className={catalogTrustLineClass}>Quick replies during business hours</p>
+              label="Add school price to cart"
+            />
+            <p className={catalogTrustLineClass}>Review totals in your cart before WhatsApp checkout</p>
           </div>
         </div>
       </div>

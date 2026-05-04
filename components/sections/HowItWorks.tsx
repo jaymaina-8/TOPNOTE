@@ -36,7 +36,7 @@ export function HowItWorks() {
               key={item.step}
               className="flex flex-1 flex-col md:min-w-0 md:flex-row md:items-stretch"
             >
-              <div className="flex flex-1 flex-col rounded-2xl bg-white p-5 text-center shadow-[var(--shadow-sm)] transition-shadow hover:shadow-[var(--shadow-md)] md:p-6">
+              <div className="flex flex-1 flex-col rounded-2xl border border-primary/10 bg-white p-5 text-center shadow-[var(--shadow-sm)] transition-shadow hover:shadow-[var(--shadow-md)] md:p-6">
                 <span className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-base font-bold text-primary ring-1 ring-primary/25 md:h-14 md:w-14 md:text-lg">
                   {item.step}
                 </span>
