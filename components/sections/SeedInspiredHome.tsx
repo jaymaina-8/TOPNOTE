@@ -241,7 +241,7 @@ export function SeedInspiredHome({ products }: SeedInspiredHomeProps) {
         </Container>
       </section>
 
-      <section className="hidden sm:block">
+      <section>
         <AnimatedStats items={statItems} />
       </section>
 

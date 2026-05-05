@@ -18,28 +18,9 @@ function useCountUp(target: number) {
   const nodeRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
-    const node = nodeRef.current;
-    if (!node) {
-      return;
-    }
-
     let frame = 0;
-    let started = false;
-    let isVisible = false;
-    let hasScrolledDown = window.scrollY > 20;
     let startTime: number | null = null;
     const duration = 1250;
-
-    const start = () => {
-      if (started || !isVisible || !hasScrolledDown) {
-        return;
-      }
-
-      started = true;
-      frame = requestAnimationFrame(animate);
-      observer.disconnect();
-      window.removeEventListener("scroll", onScroll);
-    };
 
     const animate = (time: number) => {
       if (startTime === null) {
@@ -55,29 +36,9 @@ function useCountUp(target: number) {
       }
     };
 
-    const onScroll = () => {
-      if (window.scrollY <= 20) {
-        return;
-      }
-
-      hasScrolledDown = true;
-      start();
-    };
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        isVisible = Boolean(entry?.isIntersecting);
-        start();
-      },
-      { threshold: 0.35 },
-    );
-
-    observer.observe(node);
-    window.addEventListener("scroll", onScroll, { passive: true });
+    frame = requestAnimationFrame(animate);
 
     return () => {
-      observer.disconnect();
-      window.removeEventListener("scroll", onScroll);
       cancelAnimationFrame(frame);
     };
   }, [target]);
@@ -133,7 +94,7 @@ export function AnimatedStats({ items, compact = false }: AnimatedStatsProps) {
 
   return (
     <div className="border-y border-[#ececec] bg-[#f8f8f8]">
-      <div className="mx-auto grid max-w-[1180px] grid-cols-2 divide-x divide-[#ececec] md:grid-cols-4">
+      <div className="mx-auto grid max-w-[1180px] grid-cols-1 divide-y divide-[#ececec] min-[420px]:grid-cols-2 min-[420px]:divide-x min-[420px]:divide-y-0 md:grid-cols-4">
         {items.map((item) => (
           <AnimatedNumber key={item.label} item={item} />
         ))}
