@@ -34,9 +34,9 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-neutral-100 text-neutral-900">
+    <div className="min-h-screen bg-[#f6f7f9] text-neutral-900">
       <AdminNav />
-      <div className="mx-auto max-w-6xl px-4 py-8">{children}</div>
+      <div className="mx-auto max-w-6xl px-4 py-7 sm:px-6 lg:px-8">{children}</div>
     </div>
   );
 }

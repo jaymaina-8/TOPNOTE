@@ -1,5 +1,11 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 
+import {
+  DashboardAlert,
+  DashboardPageHeader,
+  DashboardPanel,
+  DashboardStatCard,
+} from "@/components/dashboard/DashboardUi";
 import { getDashboardOverviewData } from "@/lib/queries/analytics";
 
 export const dynamic = "force-dynamic";
@@ -17,14 +23,14 @@ export default async function DashboardHomePage() {
 
   return (
     <div>
-      <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">TOPNOTE PUBLISHERS</p>
-      <h1 className="mt-1 text-2xl font-bold tracking-tight text-neutral-900">Dashboard</h1>
-      <p className="mt-2 max-w-2xl text-sm text-neutral-600">
-        Internal overview. Catalog writes use the Supabase service role on the server only.
-      </p>
+      <DashboardPageHeader
+        eyebrow="TOPNOTE PUBLISHERS"
+        title="Dashboard"
+        description="Internal overview for catalog work, inquiries, and conversion signals. Writes use the Supabase service role on the server only."
+      />
 
       {overview.ok === false ? (
-        <div className="mt-8 rounded-xl border border-amber-200/80 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+        <DashboardAlert>
           {overview.reason === "supabase_unconfigured" ? (
             <p>
               Configure <code className="rounded bg-amber-100 px-1">NEXT_PUBLIC_SUPABASE_URL</code> and{" "}
@@ -38,33 +44,17 @@ export default async function DashboardHomePage() {
           ) : (
             <p>Could not load summary data. Try again later.</p>
           )}
-        </div>
+        </DashboardAlert>
       ) : (
         <>
-          <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <li className="rounded-lg border border-neutral-300 bg-white p-4 shadow-sm">
-              <p className="text-xs text-neutral-500">Open inquiries</p>
-              <p className="text-2xl font-semibold tabular-nums text-neutral-900">{overview.summary.openInquiries}</p>
-            </li>
-            <li className="rounded-lg border border-neutral-300 bg-white p-4 shadow-sm">
-              <p className="text-xs text-neutral-500">Total inquiries</p>
-              <p className="text-2xl font-semibold tabular-nums text-neutral-900">{overview.summary.totalInquiries}</p>
-            </li>
-            <li className="rounded-lg border border-neutral-300 bg-white p-4 shadow-sm">
-              <p className="text-xs text-neutral-500">WhatsApp clicks</p>
-              <p className="text-2xl font-semibold tabular-nums text-neutral-900">
-                {overview.summary.conversionTotals.whatsapp_click}
-              </p>
-            </li>
-            <li className="rounded-lg border border-neutral-300 bg-white p-4 shadow-sm">
-              <p className="text-xs text-neutral-500">Phone clicks</p>
-              <p className="text-2xl font-semibold tabular-nums text-neutral-900">
-                {overview.summary.conversionTotals.phone_click}
-              </p>
-            </li>
+          <ul className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <DashboardStatCard label="Open inquiries" value={overview.summary.openInquiries} tone="red" />
+            <DashboardStatCard label="Total inquiries" value={overview.summary.totalInquiries} tone="sky" />
+            <DashboardStatCard label="WhatsApp clicks" value={overview.summary.conversionTotals.whatsapp_click} tone="green" />
+            <DashboardStatCard label="Phone clicks" value={overview.summary.conversionTotals.phone_click} tone="amber" />
           </ul>
 
-          <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {(
               [
                 { href: "/dashboard/products", title: "Products", description: "List, create, edit, and remove catalog items." },
@@ -77,56 +67,66 @@ export default async function DashboardHomePage() {
               <li key={href}>
                 <Link
                   href={href}
-                  className="block h-full rounded-xl border border-neutral-300 bg-white p-5 shadow-sm transition hover:border-neutral-400 hover:shadow"
+                  className="group block h-full rounded-xl border border-neutral-200 bg-white p-5 shadow-sm transition hover:border-neutral-300 hover:shadow-md"
                 >
-                  <h2 className="text-lg font-semibold text-neutral-900">{title}</h2>
-                  <p className="mt-2 text-sm text-neutral-600">{description}</p>
-                  <span className="mt-3 inline-block text-sm font-medium text-neutral-800 underline-offset-2 group-hover:underline">
-                    Open →
-                  </span>
+                  <div className="flex items-start justify-between gap-3">
+                    <h2 className="text-base font-black text-neutral-950">{title}</h2>
+                    <span className="text-primary transition-transform group-hover:translate-x-0.5" aria-hidden>
+                      →
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm leading-relaxed text-neutral-600">{description}</p>
+                  <span className="mt-4 inline-block text-sm font-bold text-primary">Open</span>
                 </Link>
               </li>
             ))}
           </ul>
 
-          <div className="mt-10 grid gap-8 lg:grid-cols-2">
-            <section>
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-600">Latest inquiries</h2>
-              <ul className="mt-2 max-h-80 overflow-y-auto rounded-lg border border-neutral-300 bg-white text-sm">
+          <div className="mt-8 grid gap-5 lg:grid-cols-2">
+            <DashboardPanel className="overflow-hidden">
+              <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-3">
+                <h2 className="text-sm font-black uppercase tracking-[0.14em] text-neutral-600">Latest inquiries</h2>
+                <Link href="/dashboard/inquiries" className="text-sm font-bold text-primary hover:text-primary/80">
+                  Open
+                </Link>
+              </div>
+              <ul className="max-h-80 overflow-y-auto text-sm">
                 {overview.recentInquiries.length === 0 ? (
-                  <li className="px-3 py-2 text-neutral-500">No inquiries yet.</li>
+                  <li className="px-4 py-5 text-neutral-500">No inquiries yet.</li>
                 ) : (
                   overview.recentInquiries.map((row) => (
-                    <li key={row.id} className="border-b border-neutral-100 px-3 py-2 last:border-0">
-                      <p className="font-medium text-neutral-900">{row.name ?? "—"}</p>
-                      <p className="text-xs text-neutral-500">{formatWhen(row.created_at)} · {row.status}</p>
+                    <li key={row.id} className="flex items-start justify-between gap-3 border-b border-neutral-100 px-4 py-3 last:border-0">
+                      <div>
+                        <p className="font-bold text-neutral-950">{row.name ?? "—"}</p>
+                        <p className="text-xs text-neutral-500">{formatWhen(row.created_at)}</p>
+                      </div>
+                      <span className="rounded-full bg-neutral-100 px-2 py-1 text-xs font-bold text-neutral-700">{row.status}</span>
                     </li>
                   ))
                 )}
               </ul>
-              <Link href="/dashboard/inquiries" className="mt-2 inline-block text-sm font-medium text-neutral-800 underline-offset-2 hover:underline">
-                Open inquiries →
-              </Link>
-            </section>
+            </DashboardPanel>
 
-            <section>
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-600">Recent conversion events</h2>
-              <ul className="mt-2 max-h-80 overflow-y-auto rounded-lg border border-neutral-300 bg-white text-sm">
+            <DashboardPanel className="overflow-hidden">
+              <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-3">
+                <h2 className="text-sm font-black uppercase tracking-[0.14em] text-neutral-600">Recent events</h2>
+                <Link href="/dashboard/analytics" className="text-sm font-bold text-primary hover:text-primary/80">
+                  Open
+                </Link>
+              </div>
+              <ul className="max-h-80 overflow-y-auto text-sm">
                 {overview.recentEvents.length === 0 ? (
-                  <li className="px-3 py-2 text-neutral-500">No events yet.</li>
+                  <li className="px-4 py-5 text-neutral-500">No events yet.</li>
                 ) : (
                   overview.recentEvents.map((ev) => (
-                    <li key={ev.id} className="border-b border-neutral-100 px-3 py-2 last:border-0">
-                      <p className="text-neutral-900">{ev.event_type}</p>
+                    <li key={ev.id} className="border-b border-neutral-100 px-4 py-3 last:border-0">
+                      <p className="font-bold text-neutral-950">{ev.event_type}</p>
                       <p className="text-xs text-neutral-500">{formatWhen(ev.created_at)}</p>
                     </li>
                   ))
                 )}
               </ul>
-              <Link href="/dashboard/analytics" className="mt-2 inline-block text-sm font-medium text-neutral-800 underline-offset-2 hover:underline">
-                Open analytics →
-              </Link>
-            </section>
+            </DashboardPanel>
           </div>
         </>
       )}

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ProductForm } from "@/components/admin/ProductForm";
+import { DashboardAlert, DashboardPageHeader, DashboardPanel } from "@/components/dashboard/DashboardUi";
 import { updateProductAction } from "@/lib/actions/admin/products";
 import { listCategoriesAdmin } from "@/lib/admin/categories-data";
 import { getProductByIdAdmin } from "@/lib/admin/products-data";
@@ -22,15 +23,15 @@ export default async function EditProductPage({ params }: PageProps) {
   if (!admin) {
     return (
       <div>
-        <p className="text-sm text-neutral-600">
-          <Link href="/dashboard/products" className="font-medium text-neutral-800 underline-offset-2 hover:underline">
-            ← Products
-          </Link>
-        </p>
-        <h1 className="mt-4 text-2xl font-bold tracking-tight text-neutral-900">Edit product</h1>
-        <div className="mt-8 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-          Add <code className="rounded bg-amber-100 px-1">SUPABASE_SERVICE_ROLE_KEY</code> to edit products.
+        <Link href="/dashboard/products" className="text-sm font-bold text-neutral-600 underline-offset-4 hover:text-neutral-950 hover:underline">
+          ← Products
+        </Link>
+        <div className="mt-4">
+          <DashboardPageHeader title="Edit product" />
         </div>
+        <DashboardAlert>
+          Add <code className="rounded bg-amber-100 px-1">SUPABASE_SERVICE_ROLE_KEY</code> to edit products.
+        </DashboardAlert>
       </div>
     );
   }
@@ -40,22 +41,26 @@ export default async function EditProductPage({ params }: PageProps) {
 
   return (
     <div>
-      <p className="text-sm text-neutral-600">
-        <Link href="/dashboard/products" className="font-medium text-neutral-800 underline-offset-2 hover:underline">
-          ← Products
-        </Link>
-      </p>
-      <h1 className="mt-4 text-2xl font-bold tracking-tight text-neutral-900">Edit product</h1>
-      <p className="mt-1 text-sm text-neutral-600">
-        Public URL:{" "}
-        <Link href={`/products/${product.slug}`} className="text-neutral-900 underline-offset-2 hover:underline">
-          /products/{product.slug}
-        </Link>
-      </p>
-
-      <div className="mt-8 rounded-xl border border-neutral-300 bg-white p-6 shadow-sm">
-        <ProductForm categories={categories} product={product} action={updateProductAction} />
+      <Link href="/dashboard/products" className="text-sm font-bold text-neutral-600 underline-offset-4 hover:text-neutral-950 hover:underline">
+        ← Products
+      </Link>
+      <div className="mt-4">
+        <DashboardPageHeader
+          title="Edit product"
+          description={
+            <>
+              Public URL:{" "}
+              <Link href={`/products/${product.slug}`} className="font-bold text-neutral-900 underline-offset-4 hover:underline">
+                /products/{product.slug}
+              </Link>
+            </>
+          }
+        />
       </div>
+
+      <DashboardPanel className="mt-8 p-6">
+        <ProductForm categories={categories} product={product} action={updateProductAction} />
+      </DashboardPanel>
     </div>
   );
 }

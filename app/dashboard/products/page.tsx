@@ -1,10 +1,16 @@
 import Link from "next/link";
 
 import { DeleteWithConfirm } from "@/components/admin/DeleteWithConfirm";
+import {
+  DashboardAlert,
+  DashboardButton,
+  DashboardEmptyState,
+  DashboardPageHeader,
+} from "@/components/dashboard/DashboardUi";
 import { deleteProductAction } from "@/lib/actions/admin/products";
 import { listProductsAdmin } from "@/lib/admin/products-data";
-import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { formatKesPrice } from "@/lib/format";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -19,92 +25,93 @@ export default async function DashboardProductsPage({ searchParams }: PageProps)
 
   return (
     <div>
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Products</h1>
-          <p className="mt-1 text-sm text-neutral-600">Create, edit, or remove catalog products.</p>
-        </div>
-        <Link
-          href="/dashboard/products/new"
-          className="rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
-        >
-          New product
-        </Link>
-      </div>
+      <DashboardPageHeader
+        title="Products"
+        description="Create, edit, feature, and remove catalog products. Keep names, prices, and category assignments ready for public browsing."
+        actions={<DashboardButton href="/dashboard/products/new">New product</DashboardButton>}
+      />
 
       {!admin ? (
-        <div className="mt-8 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+        <DashboardAlert>
           Add <code className="rounded bg-amber-100 px-1">SUPABASE_SERVICE_ROLE_KEY</code> to the server environment to
           manage products.
-        </div>
+        </DashboardAlert>
       ) : null}
 
       {sp.error === "delete" ? (
-        <div className="mt-6 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-950" role="alert">
-          Could not delete that product. Try again.
-        </div>
+        <DashboardAlert tone="red">Could not delete that product. Try again.</DashboardAlert>
       ) : null}
 
       {admin && products.length === 0 ? (
-        <p className="mt-8 rounded-xl border border-dashed border-neutral-300 bg-white px-4 py-8 text-center text-sm text-neutral-600">
-          No products yet.{" "}
-          <Link href="/dashboard/products/new" className="font-medium text-neutral-900 underline-offset-2 hover:underline">
-            Create one
-          </Link>
-          .
-        </p>
+        <div className="mt-8">
+          <DashboardEmptyState
+            title="No products yet"
+            description="Create the first catalog item so it can appear in the public product grid."
+            action={<DashboardButton href="/dashboard/products/new">Create product</DashboardButton>}
+          />
+        </div>
       ) : null}
 
       {admin && products.length > 0 ? (
-        <div className="mt-8 overflow-x-auto rounded-xl border border-neutral-300 bg-white shadow-sm">
-          <table className="min-w-full divide-y divide-neutral-200 text-left text-sm">
-            <thead className="bg-neutral-50 text-xs font-semibold uppercase tracking-wide text-neutral-600">
-              <tr>
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Slug</th>
-                <th className="px-4 py-3">Category</th>
-                <th className="px-4 py-3">Price</th>
-                <th className="px-4 py-3">Featured</th>
-                <th className="px-4 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-100">
-              {products.map((p) => (
-                <tr key={p.id} className="hover:bg-neutral-50/80">
-                  <td className="px-4 py-3 font-medium text-neutral-900">{p.name}</td>
-                  <td className="px-4 py-3 text-neutral-600">
-                    <code className="rounded bg-neutral-100 px-1 text-xs">{p.slug}</code>
-                  </td>
-                  <td className="px-4 py-3 text-neutral-700">{p.categories?.name ?? "—"}</td>
-                  <td className="px-4 py-3 text-neutral-800">{formatKesPrice(p.price)}</td>
-                  <td className="px-4 py-3 text-neutral-700">{p.is_featured ? "Yes" : "No"}</td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex flex-wrap justify-end gap-2">
-                      <Link
-                        href={`/dashboard/products/${p.id}/edit`}
-                        className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs font-medium text-neutral-800 hover:bg-neutral-100"
-                      >
-                        Edit
-                      </Link>
-                      <DeleteWithConfirm
-                        action={deleteProductAction}
-                        id={p.id}
-                        confirmMessage={`Delete product “${p.name}”? This cannot be undone.`}
-                        extraHidden={{ slug_hint: p.slug }}
-                      >
-                        <button
-                          type="submit"
-                          className="rounded-md border border-red-300 bg-white px-2 py-1 text-xs font-medium text-red-800 hover:bg-red-50"
-                        >
-                          Delete
-                        </button>
-                      </DeleteWithConfirm>
-                    </div>
-                  </td>
+        <div className="mt-8 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-100 px-4 py-3">
+            <p className="text-sm font-black text-neutral-950">{products.length} catalog items</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">Admin inventory</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-neutral-100 text-left text-sm">
+              <thead className="bg-neutral-50 text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+                <tr>
+                  <th className="px-4 py-3">Name</th>
+                  <th className="px-4 py-3">Slug</th>
+                  <th className="px-4 py-3">Category</th>
+                  <th className="px-4 py-3">Price</th>
+                  <th className="px-4 py-3">Featured</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-neutral-100">
+                {products.map((p) => (
+                  <tr key={p.id} className="hover:bg-neutral-50/80">
+                    <td className="max-w-[18rem] px-4 py-3 font-bold text-neutral-950">{p.name}</td>
+                    <td className="px-4 py-3 text-neutral-600">
+                      <code className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs font-semibold">{p.slug}</code>
+                    </td>
+                    <td className="px-4 py-3 text-neutral-700">{p.categories?.name ?? "—"}</td>
+                    <td className="px-4 py-3 font-semibold tabular-nums text-neutral-900">{formatKesPrice(p.price)}</td>
+                    <td className="px-4 py-3">
+                      <span className={p.is_featured ? "rounded-full bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700" : "rounded-full bg-neutral-100 px-2 py-1 text-xs font-bold text-neutral-600"}>
+                        {p.is_featured ? "Yes" : "No"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex flex-wrap justify-end gap-2">
+                        <Link
+                          href={`/dashboard/products/${p.id}/edit`}
+                          className="rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs font-bold text-neutral-800 hover:bg-neutral-50"
+                        >
+                          Edit
+                        </Link>
+                        <DeleteWithConfirm
+                          action={deleteProductAction}
+                          id={p.id}
+                          confirmMessage={`Delete product "${p.name}"? This cannot be undone.`}
+                          extraHidden={{ slug_hint: p.slug }}
+                        >
+                          <button
+                            type="submit"
+                            className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-50"
+                          >
+                            Delete
+                          </button>
+                        </DeleteWithConfirm>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       ) : null}
     </div>

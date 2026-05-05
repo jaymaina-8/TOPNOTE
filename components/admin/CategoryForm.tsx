@@ -8,9 +8,9 @@ import type { CategoryType } from "@/lib/supabase/types";
 
 import { AdminFormAlert } from "./AdminFormAlert";
 
-const labelCls = "block text-sm font-medium text-neutral-800";
+const labelCls = "block text-sm font-bold text-neutral-900";
 const fieldCls =
-  "mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500";
+  "mt-1.5 w-full rounded-lg border border-neutral-200 bg-white px-3 py-2.5 text-sm text-neutral-900 shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15";
 
 const TYPES: { value: CategoryType; label: string }[] = [
   { value: "books", label: "Books" },
@@ -23,7 +23,7 @@ export function CategoryForm() {
   const [state, formAction, pending] = useActionState(createCategoryAction, categoryFormInitialState);
 
   return (
-    <form action={formAction} className="max-w-xl space-y-4">
+    <form action={formAction} className="max-w-xl space-y-5">
       <AdminFormAlert message={state.error} />
 
       <div>
@@ -60,7 +60,7 @@ export function CategoryForm() {
         <button
           type="submit"
           disabled={pending}
-          className="rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-60"
+          className="inline-flex min-h-10 items-center justify-center rounded-lg bg-neutral-950 px-4 text-sm font-bold text-white transition-colors hover:bg-neutral-800 disabled:opacity-60"
         >
           {pending ? "Creating…" : "Create category"}
         </button>

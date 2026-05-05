@@ -6,6 +6,17 @@ function dispatchCartChange() {
   window.dispatchEvent(new Event("topnote-cart-change"));
 }
 
+function dispatchCartAdd(item: AddCartItemInput, quantity: number) {
+  window.dispatchEvent(
+    new CustomEvent("topnote-cart-add", {
+      detail: {
+        itemName: item.name,
+        quantity,
+      },
+    }),
+  );
+}
+
 export function readCart(): CartItem[] {
   try {
     const raw = window.localStorage.getItem(CART_STORAGE_KEY);
@@ -44,9 +55,11 @@ export function addToCart(input: AddCartItemInput) {
   if (existing) {
     existing.quantity = normalizeQuantity(existing.quantity + 1);
     writeCart(items);
+    dispatchCartAdd(input, existing.quantity);
     return existing.quantity;
   }
 
   writeCart([...items, { ...input, quantity: 1 }]);
+  dispatchCartAdd(input, 1);
   return 1;
 }

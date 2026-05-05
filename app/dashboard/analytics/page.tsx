@@ -1,5 +1,6 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 
+import { DashboardAlert, DashboardPageHeader, DashboardPanel, DashboardStatCard } from "@/components/dashboard/DashboardUi";
 import { getAnalyticsPageData } from "@/lib/queries/analytics";
 
 export const dynamic = "force-dynamic";
@@ -18,8 +19,7 @@ export default async function DashboardAnalyticsPage() {
   if (result.ok === false && result.reason === "supabase_unconfigured") {
     return (
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Analytics</h1>
-        <p className="mt-2 text-sm text-neutral-600">Configure Supabase public URL and anon key to load analytics.</p>
+        <DashboardPageHeader title="Analytics" description="Configure Supabase public URL and anon key to load analytics." />
       </div>
     );
   }
@@ -27,11 +27,11 @@ export default async function DashboardAnalyticsPage() {
   if (result.ok === false && result.reason === "service_role_unconfigured") {
     return (
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Analytics</h1>
-        <p className="mt-2 text-sm text-neutral-600">
-          Add <code className="rounded bg-neutral-200 px-1">SUPABASE_SERVICE_ROLE_KEY</code> on the server to read
-          conversion and inquiry aggregates.
-        </p>
+        <DashboardPageHeader title="Analytics" />
+        <DashboardAlert>
+          Add <code className="rounded bg-amber-100 px-1">SUPABASE_SERVICE_ROLE_KEY</code> on the server to read conversion
+          and inquiry aggregates.
+        </DashboardAlert>
       </div>
     );
   }
@@ -39,8 +39,8 @@ export default async function DashboardAnalyticsPage() {
   if (result.ok === false) {
     return (
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Analytics</h1>
-        <p className="mt-2 text-sm text-red-800">Could not load analytics. Try again later.</p>
+        <DashboardPageHeader title="Analytics" />
+        <DashboardAlert tone="red">Could not load analytics. Try again later.</DashboardAlert>
       </div>
     );
   }
@@ -49,187 +49,100 @@ export default async function DashboardAnalyticsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Analytics</h1>
-      <p className="mt-2 max-w-2xl text-sm text-neutral-600">
-        Operational view of tracked conversion events and inquiries (server-side aggregates).
-      </p>
+      <DashboardPageHeader
+        title="Analytics"
+        description="Operational view of tracked conversion events and inquiries from server-side aggregates."
+      />
 
       <section className="mt-8">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-600">Conversion events</h2>
+        <h2 className="text-sm font-black uppercase tracking-[0.14em] text-neutral-600">Conversion events</h2>
         <ul className="mt-3 grid gap-3 sm:grid-cols-3">
-          <li className="rounded-lg border border-neutral-300 bg-white p-4 shadow-sm">
-            <p className="text-xs text-neutral-500">WhatsApp clicks</p>
-            <p className="text-2xl font-semibold tabular-nums text-neutral-900">{d.conversionTotals.whatsapp_click}</p>
-          </li>
-          <li className="rounded-lg border border-neutral-300 bg-white p-4 shadow-sm">
-            <p className="text-xs text-neutral-500">Phone clicks</p>
-            <p className="text-2xl font-semibold tabular-nums text-neutral-900">{d.conversionTotals.phone_click}</p>
-          </li>
-          <li className="rounded-lg border border-neutral-300 bg-white p-4 shadow-sm">
-            <p className="text-xs text-neutral-500">Inquiry submits (tracked)</p>
-            <p className="text-2xl font-semibold tabular-nums text-neutral-900">{d.conversionTotals.inquiry_submit}</p>
-          </li>
+          <DashboardStatCard label="WhatsApp clicks" value={d.conversionTotals.whatsapp_click} tone="green" />
+          <DashboardStatCard label="Phone clicks" value={d.conversionTotals.phone_click} tone="amber" />
+          <DashboardStatCard label="Inquiry submits" value={d.conversionTotals.inquiry_submit} tone="sky" />
         </ul>
       </section>
 
-      <section className="mt-10">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-600">Inquiries</h2>
+      <section className="mt-8">
+        <h2 className="text-sm font-black uppercase tracking-[0.14em] text-neutral-600">Inquiries</h2>
         <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <li className="rounded-lg border border-neutral-300 bg-white p-4 shadow-sm">
-            <p className="text-xs text-neutral-500">Total</p>
-            <p className="text-2xl font-semibold tabular-nums text-neutral-900">{d.totalInquiries}</p>
-          </li>
-          <li className="rounded-lg border border-neutral-300 bg-white p-4 shadow-sm">
-            <p className="text-xs text-neutral-500">New</p>
-            <p className="text-2xl font-semibold tabular-nums text-neutral-900">{d.inquiryStatusTotals.new}</p>
-          </li>
-          <li className="rounded-lg border border-neutral-300 bg-white p-4 shadow-sm">
-            <p className="text-xs text-neutral-500">Contacted</p>
-            <p className="text-2xl font-semibold tabular-nums text-neutral-900">{d.inquiryStatusTotals.contacted}</p>
-          </li>
-          <li className="rounded-lg border border-neutral-300 bg-white p-4 shadow-sm">
-            <p className="text-xs text-neutral-500">Closed</p>
-            <p className="text-2xl font-semibold tabular-nums text-neutral-900">{d.inquiryStatusTotals.closed}</p>
-          </li>
+          <DashboardStatCard label="Total" value={d.totalInquiries} />
+          <DashboardStatCard label="New" value={d.inquiryStatusTotals.new} tone="red" />
+          <DashboardStatCard label="Contacted" value={d.inquiryStatusTotals.contacted} tone="amber" />
+          <DashboardStatCard label="Closed" value={d.inquiryStatusTotals.closed} tone="green" />
         </ul>
       </section>
 
-      <div className="mt-10 grid gap-8 lg:grid-cols-2">
-        <section>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-600">Top products (events)</h2>
-          <div className="mt-2 overflow-x-auto rounded-lg border border-neutral-300 bg-white">
-            <table className="w-full min-w-[280px] text-left text-sm">
-              <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase text-neutral-600">
-                <tr>
-                  <th className="px-3 py-2">Product</th>
-                  <th className="px-3 py-2 text-right">Events</th>
-                </tr>
-              </thead>
-              <tbody>
-                {d.topProductsByEvents.length === 0 ? (
-                  <tr>
-                    <td className="px-3 py-3 text-neutral-500" colSpan={2}>
-                      No data yet.
-                    </td>
-                  </tr>
-                ) : (
-                  d.topProductsByEvents.map((row) => (
-                    <tr key={row.productId} className="border-b border-neutral-100">
-                      <td className="px-3 py-2">
-                        {row.slug ? (
-                          <Link href={`/products/${row.slug}`} className="text-neutral-900 underline-offset-2 hover:underline">
-                            {row.name}
-                          </Link>
-                        ) : (
-                          row.name
-                        )}
-                      </td>
-                      <td className="px-3 py-2 text-right tabular-nums">{row.count}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
+      <div className="mt-8 grid gap-5 lg:grid-cols-2">
+        <DashboardPanel className="overflow-hidden">
+          <PanelTitle title="Top products by events" />
+          <SimpleProductTable rows={d.topProductsByEvents} empty="No event data yet." metricLabel="Events" />
+        </DashboardPanel>
 
-        <section>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-600">Top products (inquiries)</h2>
-          <div className="mt-2 overflow-x-auto rounded-lg border border-neutral-300 bg-white">
-            <table className="w-full min-w-[280px] text-left text-sm">
-              <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase text-neutral-600">
-                <tr>
-                  <th className="px-3 py-2">Product</th>
-                  <th className="px-3 py-2 text-right">Inquiries</th>
-                </tr>
-              </thead>
-              <tbody>
-                {d.topProductsByInquiries.length === 0 ? (
-                  <tr>
-                    <td className="px-3 py-3 text-neutral-500" colSpan={2}>
-                      No data yet.
-                    </td>
-                  </tr>
-                ) : (
-                  d.topProductsByInquiries.map((row) => (
-                    <tr key={`inq-${row.productId}`} className="border-b border-neutral-100">
-                      <td className="px-3 py-2">
-                        {row.slug ? (
-                          <Link href={`/products/${row.slug}`} className="text-neutral-900 underline-offset-2 hover:underline">
-                            {row.name}
-                          </Link>
-                        ) : (
-                          row.name
-                        )}
-                      </td>
-                      <td className="px-3 py-2 text-right tabular-nums">{row.count}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
+        <DashboardPanel className="overflow-hidden">
+          <PanelTitle title="Top products by inquiries" />
+          <SimpleProductTable rows={d.topProductsByInquiries} empty="No inquiry data yet." metricLabel="Inquiries" />
+        </DashboardPanel>
       </div>
 
-      <section className="mt-10">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-600">Source pages (events)</h2>
-        <div className="mt-2 overflow-x-auto rounded-lg border border-neutral-300 bg-white">
+      <DashboardPanel className="mt-8 overflow-hidden">
+        <PanelTitle title="Source pages" />
+        <div className="overflow-x-auto">
           <table className="w-full min-w-[280px] text-left text-sm">
-            <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase text-neutral-600">
+            <thead className="border-b border-neutral-100 bg-neutral-50 text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
               <tr>
-                <th className="px-3 py-2">Page</th>
-                <th className="px-3 py-2 text-right">Events</th>
+                <th className="px-4 py-3">Page</th>
+                <th className="px-4 py-3 text-right">Events</th>
               </tr>
             </thead>
             <tbody>
               {d.sourcePageBreakdown.length === 0 ? (
                 <tr>
-                  <td className="px-3 py-3 text-neutral-500" colSpan={2}>
+                  <td className="px-4 py-4 text-neutral-500" colSpan={2}>
                     No data yet.
                   </td>
                 </tr>
               ) : (
                 d.sourcePageBreakdown.map((row) => (
-                  <tr key={row.sourcePage} className="border-b border-neutral-100">
-                    <td className="max-w-md truncate px-3 py-2 text-neutral-800">{row.sourcePage}</td>
-                    <td className="px-3 py-2 text-right tabular-nums">{row.count}</td>
+                  <tr key={row.sourcePage} className="border-b border-neutral-100 last:border-0">
+                    <td className="max-w-md truncate px-4 py-3 text-neutral-800">{row.sourcePage}</td>
+                    <td className="px-4 py-3 text-right font-bold tabular-nums">{row.count}</td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
-      </section>
+      </DashboardPanel>
 
-      <section className="mt-10">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-600">Recent conversion events</h2>
-        <div className="mt-2 overflow-x-auto rounded-lg border border-neutral-300 bg-white">
+      <DashboardPanel className="mt-8 overflow-hidden">
+        <PanelTitle title="Recent conversion events" />
+        <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-left text-sm">
-            <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase text-neutral-600">
+            <thead className="border-b border-neutral-100 bg-neutral-50 text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
               <tr>
-                <th className="px-3 py-2">When</th>
-                <th className="px-3 py-2">Type</th>
-                <th className="px-3 py-2">Page</th>
-                <th className="px-3 py-2">Product</th>
+                <th className="px-4 py-3">When</th>
+                <th className="px-4 py-3">Type</th>
+                <th className="px-4 py-3">Page</th>
+                <th className="px-4 py-3">Product</th>
               </tr>
             </thead>
             <tbody>
               {d.recentEvents.length === 0 ? (
                 <tr>
-                  <td className="px-3 py-3 text-neutral-500" colSpan={4}>
+                  <td className="px-4 py-4 text-neutral-500" colSpan={4}>
                     No events yet.
                   </td>
                 </tr>
               ) : (
                 d.recentEvents.map((ev) => (
-                  <tr key={ev.id} className="border-b border-neutral-100">
-                    <td className="whitespace-nowrap px-3 py-2 text-neutral-700">{formatWhen(ev.created_at)}</td>
-                    <td className="px-3 py-2">{ev.event_type}</td>
-                    <td className="max-w-[200px] truncate px-3 py-2 text-neutral-600">{ev.source_page ?? "—"}</td>
-                    <td className="px-3 py-2">
+                  <tr key={ev.id} className="border-b border-neutral-100 last:border-0">
+                    <td className="whitespace-nowrap px-4 py-3 text-neutral-700">{formatWhen(ev.created_at)}</td>
+                    <td className="px-4 py-3 font-bold text-neutral-950">{ev.event_type}</td>
+                    <td className="max-w-[200px] truncate px-4 py-3 text-neutral-600">{ev.source_page ?? "—"}</td>
+                    <td className="px-4 py-3">
                       {ev.product && ev.product.slug ? (
-                        <Link href={`/products/${ev.product.slug}`} className="underline-offset-2 hover:underline">
+                        <Link href={`/products/${ev.product.slug}`} className="font-bold text-primary underline-offset-4 hover:underline">
                           {ev.product.name}
                         </Link>
                       ) : (
@@ -242,7 +155,62 @@ export default async function DashboardAnalyticsPage() {
             </tbody>
           </table>
         </div>
-      </section>
+      </DashboardPanel>
+    </div>
+  );
+}
+
+function PanelTitle({ title }: { title: string }) {
+  return (
+    <div className="border-b border-neutral-100 px-4 py-3">
+      <h2 className="text-sm font-black uppercase tracking-[0.14em] text-neutral-600">{title}</h2>
+    </div>
+  );
+}
+
+function SimpleProductTable({
+  rows,
+  empty,
+  metricLabel,
+}: {
+  rows: { count: number; name: string; productId: string; slug: string | null }[];
+  empty: string;
+  metricLabel: string;
+}) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[280px] text-left text-sm">
+        <thead className="border-b border-neutral-100 bg-neutral-50 text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+          <tr>
+            <th className="px-4 py-3">Product</th>
+            <th className="px-4 py-3 text-right">{metricLabel}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length === 0 ? (
+            <tr>
+              <td className="px-4 py-4 text-neutral-500" colSpan={2}>
+                {empty}
+              </td>
+            </tr>
+          ) : (
+            rows.map((row) => (
+              <tr key={`${metricLabel}-${row.productId}`} className="border-b border-neutral-100 last:border-0">
+                <td className="px-4 py-3">
+                  {row.slug ? (
+                    <Link href={`/products/${row.slug}`} className="font-bold text-neutral-950 underline-offset-4 hover:underline">
+                      {row.name}
+                    </Link>
+                  ) : (
+                    row.name
+                  )}
+                </td>
+                <td className="px-4 py-3 text-right font-bold tabular-nums">{row.count}</td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
     </div>
   );
 }

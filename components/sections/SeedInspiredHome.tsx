@@ -45,7 +45,7 @@ const articleLinks = [
     title: "How schools can prepare term supply lists earlier",
     text: "A practical ordering rhythm for head teachers and procurement teams.",
     href: "/for-schools",
-    image: "/generated/topnote-note-school-planning.png",
+    image: "/generated/topnote-school-products-order.png",
     objectPosition: "center center",
   },
   {
@@ -53,7 +53,7 @@ const articleLinks = [
     title: "What parents should check before buying CBC books",
     text: "Simple cues for choosing grade-ready materials without guesswork.",
     href: "/for-parents",
-    image: "/generated/topnote-note-parent-guide.png",
+    image: "/generated/topnote-parent-child-guide.png",
     objectPosition: "center center",
   },
   {

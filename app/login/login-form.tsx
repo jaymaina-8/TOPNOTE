@@ -9,9 +9,9 @@ export function LoginForm() {
   const [state, formAction, pending] = useActionState(loginAction, loginFormInitialState);
 
   return (
-    <form action={formAction} className="mt-6 space-y-4">
+    <form action={formAction} className="mt-7 space-y-5">
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-neutral-800">
+        <label htmlFor="email" className="block text-sm font-bold text-neutral-900">
           Email
         </label>
         <input
@@ -20,11 +20,12 @@ export function LoginForm() {
           type="email"
           autoComplete="username"
           required
-          className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 shadow-sm focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500"
+          placeholder="admin@example.com"
+          className="mt-1.5 w-full rounded-lg border border-neutral-200 bg-white px-3 py-3 text-sm text-neutral-900 shadow-sm transition placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
         />
       </div>
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-neutral-800">
+        <label htmlFor="password" className="block text-sm font-bold text-neutral-900">
           Password
         </label>
         <input
@@ -33,18 +34,18 @@ export function LoginForm() {
           type="password"
           autoComplete="current-password"
           required
-          className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 shadow-sm focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500"
+          className="mt-1.5 w-full rounded-lg border border-neutral-200 bg-white px-3 py-3 text-sm text-neutral-900 shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
         />
       </div>
       {state.error ? (
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900" role="alert">
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-900" role="alert">
           {state.error}
         </p>
       ) : null}
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-md bg-neutral-900 px-3 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-60"
+        className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-neutral-950 px-4 text-sm font-bold text-white transition-colors hover:bg-neutral-800 disabled:opacity-60"
       >
         {pending ? "Signing in…" : "Sign in"}
       </button>

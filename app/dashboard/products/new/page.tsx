@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { ProductForm } from "@/components/admin/ProductForm";
+import { DashboardAlert, DashboardPageHeader, DashboardPanel } from "@/components/dashboard/DashboardUi";
 import { createProductAction } from "@/lib/actions/admin/products";
 import { listCategoriesAdmin } from "@/lib/admin/categories-data";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
@@ -13,33 +14,33 @@ export default async function NewProductPage() {
 
   return (
     <div>
-      <p className="text-sm text-neutral-600">
-        <Link href="/dashboard/products" className="font-medium text-neutral-800 underline-offset-2 hover:underline">
-          ← Products
-        </Link>
-      </p>
-      <h1 className="mt-4 text-2xl font-bold tracking-tight text-neutral-900">New product</h1>
+      <Link href="/dashboard/products" className="text-sm font-bold text-neutral-600 underline-offset-4 hover:text-neutral-950 hover:underline">
+        ← Products
+      </Link>
+      <div className="mt-4">
+        <DashboardPageHeader title="New product" description="Add a catalog item with price, category, image, and public listing details." />
+      </div>
 
       {!admin ? (
-        <div className="mt-8 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+        <DashboardAlert>
           Add <code className="rounded bg-amber-100 px-1">SUPABASE_SERVICE_ROLE_KEY</code> to create products.
-        </div>
+        </DashboardAlert>
       ) : null}
 
       {admin && categories.length === 0 ? (
-        <div className="mt-8 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+        <DashboardAlert>
           Create a{" "}
-          <Link href="/dashboard/categories" className="font-medium underline">
+          <Link href="/dashboard/categories" className="font-bold underline">
             category
           </Link>{" "}
           first.
-        </div>
+        </DashboardAlert>
       ) : null}
 
       {admin && categories.length > 0 ? (
-        <div className="mt-8 rounded-xl border border-neutral-300 bg-white p-6 shadow-sm">
+        <DashboardPanel className="mt-8 p-6">
           <ProductForm categories={categories} action={createProductAction} />
-        </div>
+        </DashboardPanel>
       ) : null}
     </div>
   );
