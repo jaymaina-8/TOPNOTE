@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { AddToCartButton } from "@/components/cart/AddToCartButton";
 import { TrackedPhoneButton, TrackedWhatsAppButton } from "@/components/ctas/TrackedCtas";
+import { LocationBadge } from "@/components/location/LocationBadge";
 import { InquiryForm } from "@/components/forms/InquiryForm";
 import { AnimatedStats, type AnimatedStatItem } from "@/components/sections/AnimatedStats";
 import { Button } from "@/components/ui/Button";
@@ -227,7 +228,8 @@ export function SeedInspiredHome({ products }: SeedInspiredHomeProps) {
                 Browse catalog
               </Button>
             </div>
-            <div className="mt-8 flex flex-wrap gap-2.5">
+            <div className="mt-8 flex flex-wrap items-center gap-2.5">
+              <LocationBadge />
               {["CBC-aligned books", "Exam practice", "Stationery and school packs"].map((item) => (
                 <span
                   key={item}

@@ -6,6 +6,7 @@ import { TrackedPhoneLink, TrackedWhatsAppButton } from "@/components/ctas/Track
 import { FooterSocialLinks } from "@/components/layout/FooterSocialLinks";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
+import { GOOGLE_MAPS_PLACE_URL, OFFICE_ADDRESS_LINES } from "@/lib/location";
 import { LOGO_SRC, SITE_NAME } from "@/lib/site";
 import { getFooterSocialLinks } from "@/lib/social";
 import { PHONE_DISPLAY, WHATSAPP_MESSAGES } from "@/lib/whatsapp";
@@ -147,7 +148,22 @@ export function Footer() {
                 <ul className="space-y-5 text-sm text-neutral-200">
                   <li className="flex gap-3">
                     <MapPinIcon className="mt-0.5 h-5 w-5 shrink-0 text-white/90" />
-                    <span className="font-medium text-white">Kenya</span>
+                    <a
+                      href={GOOGLE_MAPS_PLACE_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn(
+                        "font-medium leading-relaxed text-white underline-offset-4 transition-colors",
+                        "hover:text-[#ffc9c9] hover:underline",
+                        "focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50",
+                      )}
+                    >
+                      {OFFICE_ADDRESS_LINES.map((line, index) => (
+                        <span key={line} className={index > 0 ? "block" : undefined}>
+                          {line}
+                        </span>
+                      ))}
+                    </a>
                   </li>
                   <li className="flex gap-3">
                     <PhoneIcon className="mt-0.5 h-5 w-5 shrink-0 text-white/90" />

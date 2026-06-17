@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { TrackedPhoneLink, TrackedWhatsAppButton } from "@/components/ctas/TrackedCtas";
+import { VisitOfficeSection } from "@/components/location/VisitOfficeSection";
 import { InquiryForm } from "@/components/forms/InquiryForm";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
@@ -13,7 +14,7 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "Contact | TOPNOTE PUBLISHERS",
   description:
-    "Message TOPNOTE PUBLISHERS on WhatsApp for the fastest reply — or send an inquiry. Nationwide support across Kenya during business hours.",
+    "Visit our Nairobi CBD office at Athi House or message TOPNOTE PUBLISHERS on WhatsApp. Nationwide support across Kenya during business hours.",
 };
 
 const supportHours = [
@@ -195,6 +196,8 @@ export default function ContactPage() {
           </div>
         </Container>
       </Section>
+
+      <VisitOfficeSection />
     </>
   );
 }
