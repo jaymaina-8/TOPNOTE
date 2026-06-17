@@ -6,6 +6,7 @@ export {
   sortCategoriesByDisplayOrder,
 } from "@/lib/categories/display-order";
 export { getCategories, getCategoriesByTypes } from "./categories";
+export { getBookSubcategories } from "./book-subcategories";
 export {
   ALL_CATALOG_CATEGORY_TYPES,
   getAllProducts,

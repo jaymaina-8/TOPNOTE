@@ -5,7 +5,8 @@ import { CatalogWithFilters } from "@/components/catalog/CatalogWithFilters";
 import { Container } from "@/components/ui/Container";
 import { PageIntro } from "@/components/ui/PageIntro";
 import { Section } from "@/components/ui/Section";
-import { getCategoriesByTypes, getParentProducts, PARENT_CATEGORY_TYPES } from "@/lib/queries";
+import { parseBookType } from "@/lib/book-types";
+import { getBookSubcategories, getCategoriesByTypes, getParentProducts, PARENT_CATEGORY_TYPES } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -15,11 +16,18 @@ export const metadata: Metadata = {
     "Browse books and stationery for home learning — retail pricing from TOPNOTE PUBLISHERS. Message us on WhatsApp for availability.",
 };
 
-export default async function ForParentsPage() {
-  const [products, categories] = await Promise.all([
+type PageProps = {
+  searchParams: Promise<{ bookType?: string }>;
+};
+
+export default async function ForParentsPage({ searchParams }: PageProps) {
+  const sp = await searchParams;
+  const [products, categories, bookSubcategories] = await Promise.all([
     getParentProducts(),
     getCategoriesByTypes([...PARENT_CATEGORY_TYPES]),
+    getBookSubcategories(),
   ]);
+  const initialBookType = parseBookType(sp.bookType, bookSubcategories.map((subcategory) => subcategory.slug));
 
   return (
     <>
@@ -57,8 +65,10 @@ export default async function ForParentsPage() {
             <CatalogWithFilters
               products={products}
               categories={categories}
+              bookSubcategories={bookSubcategories}
               sourcePage="/for-parents"
               variant="parent"
+              initialBookType={initialBookType}
               className="mt-0"
             />
           )}

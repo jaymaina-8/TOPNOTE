@@ -1,11 +1,8 @@
-import {
-  fallbackProducts,
-  getFallbackProductsByCategoryTypes,
-} from "@/lib/content/catalogFallback";
+import { fallbackProducts, getFallbackProductsByCategoryTypes } from "@/lib/content/catalogFallback";
 import { createClient } from "@/lib/supabase/server";
 import type { CategoryType, ProductWithCategory } from "@/lib/supabase/types";
 
-const productWithCategorySelect = "*, categories(*)" as const;
+const productWithCategorySelect = "*, categories(*), bookSubcategory:book_subcategories(*)" as const;
 
 /** Categories shown on the parent catalog (home & individual purchase). */
 export const PARENT_CATEGORY_TYPES: readonly CategoryType[] = ["books", "stationery"];

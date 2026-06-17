@@ -101,6 +101,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 <span className="font-medium text-neutral-800">Grade / level:</span> {product.grade}
               </p>
             ) : null}
+            {product.bookSubcategory ? (
+              <p className="mt-2 text-sm text-neutral-600">
+                <span className="font-medium text-neutral-800">Book type:</span> {product.bookSubcategory.name}
+              </p>
+            ) : null}
             <div className="mt-6 space-y-4 text-base leading-relaxed text-neutral-700">
               {bodyText.split("\n").map((para, i) => (
                 <p key={i}>{para}</p>

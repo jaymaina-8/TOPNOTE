@@ -14,6 +14,12 @@ export type Json =
 /** Allowed values for `categories.type` (CHECK constraint in schema). */
 export type CategoryType = "books" | "exams" | "stationery" | "lab";
 
+/** Allowed values for `book_subcategories.slug`. Intentionally open-ended for future book types. */
+export type BookSubcategorySlug = string;
+
+/** Public book filter values. `all` means no book subcategory filter. */
+export type BookTypeFilter = string;
+
 /** Inquiry workflow status (`inquiries.status`). */
 export type InquiryStatus = "new" | "contacted" | "closed";
 
@@ -26,6 +32,30 @@ export type ConversionEventType = "whatsapp_click" | "phone_click" | "inquiry_su
 export type Database = {
   public: {
     Tables: {
+      book_subcategories: {
+        Row: {
+          id: string;
+          name: string;
+          slug: BookSubcategorySlug;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          slug: BookSubcategorySlug;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          slug?: BookSubcategorySlug;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       categories: {
         Row: {
           id: string;
@@ -56,6 +86,7 @@ export type Database = {
           name: string;
           slug: string;
           category_id: string;
+          book_subcategory_id: string | null;
           price: number;
           image_url: string | null;
           description: string | null;
@@ -68,6 +99,7 @@ export type Database = {
           name: string;
           slug: string;
           category_id: string;
+          book_subcategory_id?: string | null;
           price: number;
           image_url?: string | null;
           description?: string | null;
@@ -80,6 +112,7 @@ export type Database = {
           name?: string;
           slug?: string;
           category_id?: string;
+          book_subcategory_id?: string | null;
           price?: number;
           image_url?: string | null;
           description?: string | null;
@@ -93,6 +126,13 @@ export type Database = {
             columns: ["category_id"];
             isOneToOne: false;
             referencedRelation: "categories";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "products_book_subcategory_id_fkey";
+            columns: ["book_subcategory_id"];
+            isOneToOne: false;
+            referencedRelation: "book_subcategories";
             referencedColumns: ["id"];
           },
         ];
@@ -222,12 +262,14 @@ export type Database = {
 };
 
 export type CategoryRow = Database["public"]["Tables"]["categories"]["Row"];
+export type BookSubcategoryRow = Database["public"]["Tables"]["book_subcategories"]["Row"];
 export type ProductRow = Database["public"]["Tables"]["products"]["Row"];
 export type TestimonialRow = Database["public"]["Tables"]["testimonials"]["Row"];
 export type InquiryRow = Database["public"]["Tables"]["inquiries"]["Row"];
 export type ConversionEventRow = Database["public"]["Tables"]["conversion_events"]["Row"];
 
-/** Product row with nested category from `select('*, categories(*)')`. */
+/** Product row with nested category and book subcategory. */
 export type ProductWithCategory = ProductRow & {
   categories: CategoryRow | null;
+  bookSubcategory: BookSubcategoryRow | null;
 };
