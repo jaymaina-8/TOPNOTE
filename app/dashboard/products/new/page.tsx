@@ -4,13 +4,14 @@ import { ProductForm } from "@/components/admin/ProductForm";
 import { DashboardAlert, DashboardPageHeader, DashboardPanel } from "@/components/dashboard/DashboardUi";
 import { createProductAction } from "@/lib/actions/admin/products";
 import { listCategoriesAdmin } from "@/lib/admin/categories-data";
+import { getBookSubcategories } from "@/lib/queries";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewProductPage() {
   const admin = createServiceRoleClient();
-  const categories = admin ? await listCategoriesAdmin() : [];
+  const [categories, bookSubcategories] = admin ? await Promise.all([listCategoriesAdmin(), getBookSubcategories()]) : [[], []];
 
   return (
     <div>
@@ -39,7 +40,7 @@ export default async function NewProductPage() {
 
       {admin && categories.length > 0 ? (
         <DashboardPanel className="mt-8 p-6">
-          <ProductForm categories={categories} action={createProductAction} />
+          <ProductForm categories={categories} bookSubcategories={bookSubcategories} action={createProductAction} />
         </DashboardPanel>
       ) : null}
     </div>

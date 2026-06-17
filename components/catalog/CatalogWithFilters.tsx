@@ -1,14 +1,17 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import { BookTypeTabs } from "@/components/catalog/BookTypeTabs";
 import { ProductCard } from "@/components/products/ProductCard";
 import { ParentProductCard } from "@/components/products/ParentProductCard";
 import { SchoolProductCard } from "@/components/products/SchoolProductCard";
 import { catalogProductGridClass } from "@/components/products/productCardClasses";
 import { sortCategoriesByDisplayOrder } from "@/lib/categories/display-order";
+import { parseBookType } from "@/lib/book-types";
 import { cn } from "@/lib/utils";
-import type { CategoryRow, CategoryType, ProductWithCategory } from "@/lib/supabase/types";
+import type { BookSubcategoryRow, BookTypeFilter, CategoryRow, CategoryType, ProductWithCategory } from "@/lib/supabase/types";
 
 function gradeSortKey(grade: string | null): number {
   if (grade == null || grade.trim() === "") return 10_000;
@@ -39,10 +42,12 @@ function productMatchesSearch(product: ProductWithCategory, q: string): boolean 
 export type CatalogWithFiltersProps = {
   products: ProductWithCategory[];
   categories: CategoryRow[];
+  bookSubcategories: BookSubcategoryRow[];
   sourcePage: string;
   variant: "product" | "parent" | "school";
   /** When set (e.g. from `/products?category=books`), the catalog opens with this filter applied. */
   initialCategoryType?: CategoryType | "all";
+  initialBookType?: BookTypeFilter;
   /** Optional content between filters and the grid (e.g. school pricing callout). */
   children?: ReactNode;
   className?: string;
@@ -69,24 +74,52 @@ function ListingCard({
 export function CatalogWithFilters({
   products,
   categories,
+  bookSubcategories,
   sourcePage,
   variant,
   initialCategoryType,
+  initialBookType,
   children,
   className,
 }: CatalogWithFiltersProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [query, setQuery] = useState("");
   const [selectedType, setSelectedType] = useState<CategoryType | "all">(
     () => initialCategoryType ?? "all",
   );
+  const [selectedBookType, setSelectedBookType] = useState<BookTypeFilter>(() => initialBookType ?? "all");
+  const searchParamsString = searchParams.toString();
+
+  useEffect(() => {
+    const urlBookType = parseBookType(searchParams.get("bookType") ?? undefined, bookSubcategories.map((subcategory) => subcategory.slug));
+    setSelectedBookType(urlBookType);
+    // Intentionally react to URL changes only; state is otherwise controlled by tab clicks.
+  }, [bookSubcategories, searchParams, searchParamsString]);
+
+  const updateBookType = (value: BookTypeFilter) => {
+    setSelectedBookType(value);
+
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === "all") {
+      params.delete("bookType");
+    } else {
+      params.set("bookType", value);
+    }
+
+    const nextUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+    router.replace(nextUrl, { scroll: false });
+  };
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
       if (selectedType !== "all" && p.categories?.type !== selectedType) return false;
+      if (p.categories?.type === "books" && selectedBookType !== "all" && p.bookSubcategory?.slug !== selectedBookType) return false;
       if (!productMatchesSearch(p, query)) return false;
       return true;
     });
-  }, [products, query, selectedType]);
+  }, [products, query, selectedType, selectedBookType]);
 
   const sortedCategories = useMemo(() => sortCategoriesByDisplayOrder(categories), [categories]);
 
@@ -185,16 +218,29 @@ export function CatalogWithFilters({
         <div className="space-y-10 md:space-y-12">
           {sortedCategories.map((category) => {
             const rawItems = groupedProducts[category.slug] ?? [];
-            const items = sortProductsWithinCategory(rawItems);
+            const items = sortProductsWithinCategory(
+              category.slug === "books" && selectedBookType !== "all"
+                ? rawItems.filter((product) => product.bookSubcategory?.slug === selectedBookType)
+                : rawItems,
+            );
             if (items.length === 0) return null;
             return (
               <section key={category.slug} className="space-y-4 md:space-y-5" aria-labelledby={`catalog-heading-${category.slug}`}>
-                <h2
-                  id={`catalog-heading-${category.slug}`}
-                  className="text-lg font-bold tracking-tight text-neutral-900 md:text-xl"
-                >
-                  {category.name}
-                </h2>
+                <div className="space-y-3">
+                  <h2
+                    id={`catalog-heading-${category.slug}`}
+                    className="text-lg font-bold tracking-tight text-neutral-900 md:text-xl"
+                  >
+                    {category.slug === "books" ? category.name.toUpperCase() : category.name}
+                  </h2>
+                  {category.slug === "books" ? (
+                    <BookTypeTabs
+                      value={selectedBookType}
+                      bookSubcategories={bookSubcategories}
+                      onChange={updateBookType}
+                    />
+                  ) : null}
+                </div>
                 <ul className={catalogProductGridClass}>
                   {items.map((product) => (
                     <li key={product.id}>

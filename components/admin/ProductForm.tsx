@@ -1,10 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 
 import type { ProductFormState } from "@/lib/admin/action-form-state";
 import { productFormInitialState } from "@/lib/admin/action-form-state";
-import type { CategoryRow, ProductWithCategory } from "@/lib/supabase/types";
+import type { BookSubcategoryRow, CategoryRow, ProductWithCategory } from "@/lib/supabase/types";
 
 import { AdminFormAlert } from "./AdminFormAlert";
 
@@ -14,13 +14,30 @@ const fieldCls =
 
 type Props = {
   categories: CategoryRow[];
+  bookSubcategories: BookSubcategoryRow[];
   action: (prev: ProductFormState, formData: FormData) => Promise<ProductFormState>;
   product?: ProductWithCategory;
 };
 
-export function ProductForm({ categories, action, product }: Props) {
+export function ProductForm({ categories, bookSubcategories, action, product }: Props) {
   const [state, formAction, pending] = useActionState(action, productFormInitialState);
   const isEdit = Boolean(product);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(product?.category_id ?? "");
+  const [selectedBookSubcategoryId, setSelectedBookSubcategoryId] = useState(product?.bookSubcategory?.id ?? "");
+
+  const selectedCategory = useMemo(
+    () => categories.find((category) => category.id === selectedCategoryId) ?? null,
+    [categories, selectedCategoryId],
+  );
+  const isBookCategory = selectedCategory?.type === "books";
+  const defaultBookSubcategoryId =
+    bookSubcategories.find((subcategory) => subcategory.slug === "workbooks")?.id ?? bookSubcategories[0]?.id ?? "";
+
+  useEffect(() => {
+    if (isBookCategory && !selectedBookSubcategoryId && defaultBookSubcategoryId) {
+      setSelectedBookSubcategoryId(defaultBookSubcategoryId);
+    }
+  }, [defaultBookSubcategoryId, isBookCategory, selectedBookSubcategoryId]);
 
   return (
     <form action={formAction} className="max-w-xl space-y-5">
@@ -66,7 +83,8 @@ export function ProductForm({ categories, action, product }: Props) {
           name="category_id"
           required
           className={fieldCls}
-          defaultValue={product?.category_id ?? ""}
+          value={selectedCategoryId}
+          onChange={(event) => setSelectedCategoryId(event.target.value)}
         >
           <option value="" disabled>
             Select a category
@@ -78,6 +96,33 @@ export function ProductForm({ categories, action, product }: Props) {
           ))}
         </select>
       </div>
+
+      {isBookCategory ? (
+        <div>
+          <label className={labelCls} htmlFor="book_subcategory_id">
+            Book Type <span className="text-red-600">*</span>
+          </label>
+          <select
+            id="book_subcategory_id"
+            name="book_subcategory_id"
+            required
+            className={fieldCls}
+            value={selectedBookSubcategoryId}
+            onChange={(event) => setSelectedBookSubcategoryId(event.target.value)}
+          >
+            <option value="" disabled>
+              Select book type
+            </option>
+            {bookSubcategories.map((subcategory) => (
+              <option key={subcategory.id} value={subcategory.id}>
+                {subcategory.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : (
+        <input type="hidden" name="book_subcategory_id" value="" />
+      )}
 
       <div>
         <label className={labelCls} htmlFor="price">

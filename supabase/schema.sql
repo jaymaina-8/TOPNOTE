@@ -7,6 +7,16 @@
 -- Tables
 -- -----------------------------------------------------------------------------
 
+create table if not exists public.book_subcategories (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  slug text not null unique,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_book_subcategories_slug on public.book_subcategories (slug);
+
 create table if not exists public.categories (
   id uuid primary key default gen_random_uuid(),
   name text not null,
@@ -23,6 +33,7 @@ create table if not exists public.products (
   name text not null,
   slug text not null unique,
   category_id uuid not null references public.categories (id) on delete cascade,
+  book_subcategory_id uuid references public.book_subcategories (id) on delete set null,
   price numeric(12, 2) not null,
   image_url text,
   description text,
@@ -32,8 +43,13 @@ create table if not exists public.products (
   constraint products_price_non_negative check (price >= 0)
 );
 
+alter table public.products
+  add column if not exists book_subcategory_id uuid references public.book_subcategories (id) on delete set null;
+
 create index if not exists idx_products_slug on public.products (slug);
 create index if not exists idx_products_category_id on public.products (category_id);
+create index if not exists idx_products_book_subcategory_id on public.products (book_subcategory_id)
+  where book_subcategory_id is not null;
 create index if not exists idx_products_is_featured on public.products (is_featured);
 
 create table if not exists public.testimonials (
@@ -84,12 +100,68 @@ create index if not exists idx_conversion_events_source_product_id on public.con
 -- -----------------------------------------------------------------------------
 
 alter table public.categories enable row level security;
+alter table public.book_subcategories enable row level security;
 alter table public.products enable row level security;
 alter table public.testimonials enable row level security;
 alter table public.inquiries enable row level security;
 alter table public.conversion_events enable row level security;
 
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+create or replace function public.validate_product_book_subcategory()
+returns trigger
+language plpgsql
+as $$
+declare
+  category_type text;
+begin
+  select c.type into category_type
+  from public.categories c
+  where c.id = new.category_id;
+
+  if category_type = 'books' then
+    if new.book_subcategory_id is null then
+      raise exception 'Book type is required for Books.';
+    end if;
+
+    if not exists (
+      select 1
+      from public.book_subcategories bs
+      where bs.id = new.book_subcategory_id
+    ) then
+      raise exception 'Invalid book type.';
+    end if;
+  elsif new.book_subcategory_id is not null then
+    raise exception 'Book type can only be set for Books.';
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists set_book_subcategories_updated_at on public.book_subcategories;
+create trigger set_book_subcategories_updated_at
+before update on public.book_subcategories
+for each row execute function public.set_updated_at();
+
+drop trigger if exists validate_products_book_subcategory on public.products;
+create trigger validate_products_book_subcategory
+before insert or update on public.products
+for each row execute function public.validate_product_book_subcategory();
+
 -- Catalog & social proof: public read
+drop policy if exists "book_subcategories_select_public" on public.book_subcategories;
+create policy "book_subcategories_select_public" on public.book_subcategories
+  for select using (true);
+
 drop policy if exists "categories_select_public" on public.categories;
 create policy "categories_select_public" on public.categories
   for select using (true);

@@ -7,6 +7,7 @@ import { updateProductAction } from "@/lib/actions/admin/products";
 import { listCategoriesAdmin } from "@/lib/admin/categories-data";
 import { getProductByIdAdmin } from "@/lib/admin/products-data";
 import { UUID_RE } from "@/lib/admin/validation";
+import { getBookSubcategories } from "@/lib/queries";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +37,11 @@ export default async function EditProductPage({ params }: PageProps) {
     );
   }
 
-  const [product, categories] = await Promise.all([getProductByIdAdmin(id), listCategoriesAdmin()]);
+  const [product, categories, bookSubcategories] = await Promise.all([
+    getProductByIdAdmin(id),
+    listCategoriesAdmin(),
+    getBookSubcategories(),
+  ]);
   if (!product) notFound();
 
   return (
@@ -59,7 +64,7 @@ export default async function EditProductPage({ params }: PageProps) {
       </div>
 
       <DashboardPanel className="mt-8 p-6">
-        <ProductForm categories={categories} product={product} action={updateProductAction} />
+        <ProductForm categories={categories} bookSubcategories={bookSubcategories} product={product} action={updateProductAction} />
       </DashboardPanel>
     </div>
   );

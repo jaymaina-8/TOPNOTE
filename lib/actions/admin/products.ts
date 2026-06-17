@@ -30,6 +30,7 @@ export async function createProductAction(_prev: ProductFormState, formData: For
   const name = parseRequiredString(formData, "name");
   const slug = parseRequiredString(formData, "slug");
   const categoryId = parseRequiredString(formData, "category_id");
+  const bookSubcategoryId = parseOptionalString(formData, "book_subcategory_id");
   const price = parseNonNegativePrice(formData, "price");
   const description = parseOptionalString(formData, "description");
   const grade = parseOptionalString(formData, "grade");
@@ -41,8 +42,24 @@ export async function createProductAction(_prev: ProductFormState, formData: For
   if (!categoryId || !UUID_RE.test(categoryId)) return { error: "Choose a valid category." };
   if (price === null) return { error: "Price must be a non-negative number." };
 
-  const { data: cat, error: catErr } = await admin.from("categories").select("id").eq("id", categoryId).maybeSingle();
+  const { data: cat, error: catErr } = await admin.from("categories").select("id, type").eq("id", categoryId).maybeSingle();
   if (catErr || !cat) return { error: "That category does not exist." };
+
+  const isBookCategory = cat.type === "books";
+
+  let normalizedBookSubcategoryId: string | null = null;
+  if (isBookCategory) {
+    if (!bookSubcategoryId || !UUID_RE.test(bookSubcategoryId)) return { error: "Choose a book type." };
+    const { data: bookSubcategory, error: bookSubcategoryErr } = await admin
+      .from("book_subcategories")
+      .select("id")
+      .eq("id", bookSubcategoryId)
+      .maybeSingle();
+    if (bookSubcategoryErr || !bookSubcategory) return { error: "That book type does not exist." };
+    normalizedBookSubcategoryId = bookSubcategory.id;
+  } else if (bookSubcategoryId) {
+    return { error: "Book type can only be set for Books." };
+  }
 
   let imageUrl: string | null = null;
   const imageFile = getFormImageFile(formData);
@@ -56,6 +73,7 @@ export async function createProductAction(_prev: ProductFormState, formData: For
     name,
     slug,
     category_id: categoryId,
+    book_subcategory_id: normalizedBookSubcategoryId,
     price,
     image_url: imageUrl,
     description,
@@ -85,6 +103,7 @@ export async function updateProductAction(_prev: ProductFormState, formData: For
   const name = parseRequiredString(formData, "name");
   const slug = parseRequiredString(formData, "slug");
   const categoryId = parseRequiredString(formData, "category_id");
+  const bookSubcategoryId = parseOptionalString(formData, "book_subcategory_id");
   const price = parseNonNegativePrice(formData, "price");
   const description = parseOptionalString(formData, "description");
   const grade = parseOptionalString(formData, "grade");
@@ -97,8 +116,24 @@ export async function updateProductAction(_prev: ProductFormState, formData: For
   if (!categoryId || !UUID_RE.test(categoryId)) return { error: "Choose a valid category." };
   if (price === null) return { error: "Price must be a non-negative number." };
 
-  const { data: cat, error: catErr } = await admin.from("categories").select("id").eq("id", categoryId).maybeSingle();
+  const { data: cat, error: catErr } = await admin.from("categories").select("id, type").eq("id", categoryId).maybeSingle();
   if (catErr || !cat) return { error: "That category does not exist." };
+
+  const isBookCategory = cat.type === "books";
+
+  let normalizedBookSubcategoryId: string | null = null;
+  if (isBookCategory) {
+    if (!bookSubcategoryId || !UUID_RE.test(bookSubcategoryId)) return { error: "Choose a book type." };
+    const { data: bookSubcategory, error: bookSubcategoryErr } = await admin
+      .from("book_subcategories")
+      .select("id")
+      .eq("id", bookSubcategoryId)
+      .maybeSingle();
+    if (bookSubcategoryErr || !bookSubcategory) return { error: "That book type does not exist." };
+    normalizedBookSubcategoryId = bookSubcategory.id;
+  } else if (bookSubcategoryId) {
+    return { error: "Book type can only be set for Books." };
+  }
 
   const { data: existing, error: existingErr } = await admin
     .from("products")
@@ -126,6 +161,7 @@ export async function updateProductAction(_prev: ProductFormState, formData: For
       name,
       slug,
       category_id: categoryId,
+      book_subcategory_id: normalizedBookSubcategoryId,
       price,
       image_url: imageUrl,
       description,

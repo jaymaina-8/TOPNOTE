@@ -65,6 +65,7 @@ export default async function DashboardProductsPage({ searchParams }: PageProps)
                   <th className="px-4 py-3">Name</th>
                   <th className="px-4 py-3">Slug</th>
                   <th className="px-4 py-3">Category</th>
+                  <th className="px-4 py-3">Book Type</th>
                   <th className="px-4 py-3">Price</th>
                   <th className="px-4 py-3">Featured</th>
                   <th className="px-4 py-3 text-right">Actions</th>
@@ -78,6 +79,7 @@ export default async function DashboardProductsPage({ searchParams }: PageProps)
                       <code className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs font-semibold">{p.slug}</code>
                     </td>
                     <td className="px-4 py-3 text-neutral-700">{p.categories?.name ?? "—"}</td>
+                    <td className="px-4 py-3 text-neutral-700">{p.bookSubcategory?.name ?? "—"}</td>
                     <td className="px-4 py-3 font-semibold tabular-nums text-neutral-900">{formatKesPrice(p.price)}</td>
                     <td className="px-4 py-3">
                       <span className={p.is_featured ? "rounded-full bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700" : "rounded-full bg-neutral-100 px-2 py-1 text-xs font-bold text-neutral-600"}>

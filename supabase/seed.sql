@@ -1,6 +1,12 @@
 -- TOP NOTE PUBLISHERS — seed data
 -- Run after schema.sql in Supabase SQL Editor.
--- Safe to re-run: uses ON CONFLICT (slug) DO NOTHING on categories and products.
+-- Safe to re-run: uses ON CONFLICT (slug) DO NOTHING on book subcategories, categories and products.
+
+insert into public.book_subcategories (name, slug)
+values
+  ('Workbooks', 'workbooks'),
+  ('Assessment Books', 'assessment-books')
+on conflict (slug) do nothing;
 
 insert into public.categories (name, slug, type)
 values
@@ -10,39 +16,46 @@ values
   ('Lab Equipment', 'lab-equipment', 'lab')
 on conflict (slug) do nothing;
 
-insert into public.products (name, slug, category_id, price, grade, is_featured, description, image_url)
+insert into public.products (name, slug, category_id, book_subcategory_id, price, grade, is_featured, description, image_url)
 select
   'Grade 4 Learner''s Revision Workbook',
   'grade-4-learners-revision-workbook',
   c.id,
+  bs.id,
   450.00,
   'Grade 4',
   true,
   'Structured revision activities aligned to the primary curriculum.',
   null
 from public.categories c
+cross join public.book_subcategories bs
 where c.slug = 'books'
+  and bs.slug = 'workbooks'
 on conflict (slug) do nothing;
 
-insert into public.products (name, slug, category_id, price, grade, is_featured, description, image_url)
+insert into public.products (name, slug, category_id, book_subcategory_id, price, grade, is_featured, description, image_url)
 select
   'Grade 6 Mathematics Workbook',
   'grade-6-mathematics-workbook',
   c.id,
+  bs.id,
   520.00,
   'Grade 6',
   true,
   'Practice and worked examples for middle-primary mathematics.',
   null
 from public.categories c
+cross join public.book_subcategories bs
 where c.slug = 'books'
+  and bs.slug = 'workbooks'
 on conflict (slug) do nothing;
 
-insert into public.products (name, slug, category_id, price, is_featured, description, image_url)
+insert into public.products (name, slug, category_id, book_subcategory_id, price, is_featured, description, image_url)
 select
   'School Exam Pack',
   'school-exam-pack',
   c.id,
+  null,
   890.00,
   true,
   'Curated past papers and marking guides for term assessments.',
@@ -51,11 +64,12 @@ from public.categories c
 where c.slug = 'exams'
 on conflict (slug) do nothing;
 
-insert into public.products (name, slug, category_id, price, is_featured, description, image_url)
+insert into public.products (name, slug, category_id, book_subcategory_id, price, is_featured, description, image_url)
 select
   'Ballpoint Pen Set',
   'ballpoint-pen-set',
   c.id,
+  null,
   180.00,
   false,
   '12-pack smooth-writing pens for everyday school use.',
@@ -64,11 +78,12 @@ from public.categories c
 where c.slug = 'stationery'
 on conflict (slug) do nothing;
 
-insert into public.products (name, slug, category_id, price, is_featured, description, image_url)
+insert into public.products (name, slug, category_id, book_subcategory_id, price, is_featured, description, image_url)
 select
   'Basic Chemistry Lab Kit',
   'basic-chemistry-lab-kit',
   c.id,
+  null,
   3200.00,
   true,
   'Starter glassware and safe consumables for introductory chemistry practicals.',

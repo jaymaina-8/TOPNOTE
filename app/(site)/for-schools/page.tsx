@@ -5,8 +5,9 @@ import { CatalogWithFilters } from "@/components/catalog/CatalogWithFilters";
 import { Container } from "@/components/ui/Container";
 import { PageIntro } from "@/components/ui/PageIntro";
 import { Section } from "@/components/ui/Section";
+import { parseBookType } from "@/lib/book-types";
 import { SCHOOL_BULK_DISCOUNT_PERCENT } from "@/lib/pricing";
-import { ALL_CATALOG_CATEGORY_TYPES, getCategoriesByTypes, getSchoolProducts } from "@/lib/queries";
+import { ALL_CATALOG_CATEGORY_TYPES, getBookSubcategories, getCategoriesByTypes, getSchoolProducts } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -16,11 +17,18 @@ export const metadata: Metadata = {
     "Bulk school supply for books, stationery, lab equipment, and exams — school pricing with bulk discount from TOPNOTE PUBLISHERS.",
 };
 
-export default async function ForSchoolsPage() {
-  const [products, categories] = await Promise.all([
+type PageProps = {
+  searchParams: Promise<{ bookType?: string }>;
+};
+
+export default async function ForSchoolsPage({ searchParams }: PageProps) {
+  const sp = await searchParams;
+  const [products, categories, bookSubcategories] = await Promise.all([
     getSchoolProducts(),
     getCategoriesByTypes([...ALL_CATALOG_CATEGORY_TYPES]),
+    getBookSubcategories(),
   ]);
+  const initialBookType = parseBookType(sp.bookType, bookSubcategories.map((subcategory) => subcategory.slug));
 
   return (
     <>
@@ -88,8 +96,10 @@ export default async function ForSchoolsPage() {
             <CatalogWithFilters
               products={products}
               categories={categories}
+              bookSubcategories={bookSubcategories}
               sourcePage="/for-schools"
               variant="school"
+              initialBookType={initialBookType}
               className="mt-0"
             >
               <div className="max-w-2xl rounded-2xl bg-white px-4 py-3.5 text-sm leading-relaxed text-neutral-700 shadow-[var(--shadow-sm)]">

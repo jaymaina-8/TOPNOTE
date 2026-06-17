@@ -1,7 +1,7 @@
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 import type { ProductWithCategory } from "@/lib/supabase/types";
 
-const productWithCategorySelect = "*, categories(*)" as const;
+const productWithCategorySelect = "*, categories(*), bookSubcategory:book_subcategories(*)" as const;
 
 export async function listProductsAdmin(): Promise<ProductWithCategory[]> {
   const admin = createServiceRoleClient();
