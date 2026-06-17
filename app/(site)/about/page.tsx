@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 
 import { TrackedWhatsAppButton } from "@/components/ctas/TrackedCtas";
+import { LocationSection } from "@/components/location/LocationSection";
 import { Testimonials } from "@/components/sections/Testimonials";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
@@ -15,7 +16,7 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "About Us | TOPNOTE PUBLISHERS",
   description:
-    "TOPNOTE PUBLISHERS supplies schools and families across Kenya with revision books, exams, stationery, and lab materials — clear pricing and dependable delivery.",
+    "TOPNOTE PUBLISHERS supplies schools and families across Kenya from our Nairobi CBD office — revision books, exams, stationery, and lab materials with clear pricing and dependable delivery.",
 };
 
 const STORY_IMAGE = HERO_BOOK_PUBLIC_PATHS[3];
@@ -110,6 +111,8 @@ export default function AboutPage() {
           </div>
         </Container>
       </Section>
+
+      <LocationSection />
 
       <Section surface="muted" className={sectionY}>
         <Container className="max-w-6xl">
