@@ -9,12 +9,29 @@ loadEnvConfig(projectRoot);
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ?? "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ?? "";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim() ?? "";
+
+function serverActionAllowedOrigins(): string[] {
+  const origins = new Set<string>();
+  for (const raw of [siteUrl, process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : ""]) {
+    if (!raw) continue;
+    try {
+      origins.add(new URL(raw).host);
+    } catch {
+      // ignore invalid URLs
+    }
+  }
+  return [...origins];
+}
+
+const allowedOrigins = serverActionAllowedOrigins();
 
 const nextConfig: NextConfig = {
   /** Allow product image uploads (validated to 5 MiB server-side) via Server Actions. */
   experimental: {
     serverActions: {
       bodySizeLimit: "6mb",
+      ...(allowedOrigins.length > 0 ? { allowedOrigins } : {}),
     },
   },
   /** Legacy internal URLs from the MVP admin — canonical UI lives under `/dashboard/*`. */

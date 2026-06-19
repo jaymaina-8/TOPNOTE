@@ -4,10 +4,10 @@ import { notFound } from "next/navigation";
 import { ProductForm } from "@/components/admin/ProductForm";
 import { DashboardAlert, DashboardPageHeader, DashboardPanel } from "@/components/dashboard/DashboardUi";
 import { updateProductAction } from "@/lib/actions/admin/products";
+import { listBookSubcategoriesAdmin } from "@/lib/admin/book-subcategories-data";
 import { listCategoriesAdmin } from "@/lib/admin/categories-data";
 import { getProductByIdAdmin } from "@/lib/admin/products-data";
 import { UUID_RE } from "@/lib/admin/validation";
-import { getBookSubcategories } from "@/lib/queries";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -40,7 +40,7 @@ export default async function EditProductPage({ params }: PageProps) {
   const [product, categories, bookSubcategories] = await Promise.all([
     getProductByIdAdmin(id),
     listCategoriesAdmin(),
-    getBookSubcategories(),
+    listBookSubcategoriesAdmin(),
   ]);
   if (!product) notFound();
 
