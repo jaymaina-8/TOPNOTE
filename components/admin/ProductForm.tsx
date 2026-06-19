@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useMemo, useState } from "react";
 
 import type { ProductFormState } from "@/lib/admin/action-form-state";
@@ -20,6 +21,7 @@ type Props = {
 };
 
 export function ProductForm({ categories, bookSubcategories, action, product }: Props) {
+  const router = useRouter();
   const [state, formAction, pending] = useActionState(action, productFormInitialState);
   const isEdit = Boolean(product);
   const [selectedCategoryId, setSelectedCategoryId] = useState(product?.category_id ?? "");
@@ -39,9 +41,16 @@ export function ProductForm({ categories, bookSubcategories, action, product }: 
     }
   }, [defaultBookSubcategoryId, isBookCategory, selectedBookSubcategoryId]);
 
+  useEffect(() => {
+    if (state?.success) {
+      router.push("/dashboard/products");
+      router.refresh();
+    }
+  }, [router, state?.success]);
+
   return (
     <form action={formAction} className="max-w-xl space-y-5">
-      <AdminFormAlert message={state.error} />
+      <AdminFormAlert message={state?.error} />
 
       {isEdit && product ? <input type="hidden" name="id" value={product.id} /> : null}
 

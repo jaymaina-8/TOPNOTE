@@ -3,15 +3,17 @@ import Link from "next/link";
 import { ProductForm } from "@/components/admin/ProductForm";
 import { DashboardAlert, DashboardPageHeader, DashboardPanel } from "@/components/dashboard/DashboardUi";
 import { createProductAction } from "@/lib/actions/admin/products";
+import { listBookSubcategoriesAdmin } from "@/lib/admin/book-subcategories-data";
 import { listCategoriesAdmin } from "@/lib/admin/categories-data";
-import { getBookSubcategories } from "@/lib/queries";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewProductPage() {
   const admin = createServiceRoleClient();
-  const [categories, bookSubcategories] = admin ? await Promise.all([listCategoriesAdmin(), getBookSubcategories()]) : [[], []];
+  const [categories, bookSubcategories] = admin
+    ? await Promise.all([listCategoriesAdmin(), listBookSubcategoriesAdmin()])
+    : [[], []];
 
   return (
     <div>
@@ -38,7 +40,15 @@ export default async function NewProductPage() {
         </DashboardAlert>
       ) : null}
 
-      {admin && categories.length > 0 ? (
+      {admin && categories.length > 0 && bookSubcategories.length === 0 ? (
+        <DashboardAlert>
+          Book types are not set up yet. Run the Supabase migration{" "}
+          <code className="rounded bg-amber-100 px-1">20260616120000_book_subcategories.sql</code> so Assessment Books and
+          Workbooks appear in the form.
+        </DashboardAlert>
+      ) : null}
+
+      {admin && categories.length > 0 && bookSubcategories.length > 0 ? (
         <DashboardPanel className="mt-8 p-6">
           <ProductForm categories={categories} bookSubcategories={bookSubcategories} action={createProductAction} />
         </DashboardPanel>

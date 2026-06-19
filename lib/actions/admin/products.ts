@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -90,7 +90,7 @@ export async function createProductAction(_prev: ProductFormState, formData: For
   revalidatePath("/dashboard/products");
   revalidatePath("/products");
   revalidatePath("/");
-  redirect("/dashboard/products");
+  return { error: null, success: true };
 }
 
 export async function updateProductAction(_prev: ProductFormState, formData: FormData): Promise<ProductFormState> {
@@ -180,7 +180,7 @@ export async function updateProductAction(_prev: ProductFormState, formData: For
   revalidatePath("/products");
   revalidatePath(`/products/${slug}`);
   revalidatePath("/");
-  redirect("/dashboard/products");
+  return { error: null, success: true };
 }
 
 export async function deleteProductAction(formData: FormData): Promise<void> {
