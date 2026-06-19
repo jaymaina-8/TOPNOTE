@@ -36,12 +36,6 @@ export function ProductForm({ categories, bookSubcategories, action, product }: 
     bookSubcategories.find((subcategory) => subcategory.slug === "workbooks")?.id ?? bookSubcategories[0]?.id ?? "";
 
   useEffect(() => {
-    if (isBookCategory && !selectedBookSubcategoryId && defaultBookSubcategoryId) {
-      setSelectedBookSubcategoryId(defaultBookSubcategoryId);
-    }
-  }, [defaultBookSubcategoryId, isBookCategory, selectedBookSubcategoryId]);
-
-  useEffect(() => {
     if (state?.success) {
       router.push("/dashboard/products");
       router.refresh();
@@ -93,7 +87,14 @@ export function ProductForm({ categories, bookSubcategories, action, product }: 
           required
           className={fieldCls}
           value={selectedCategoryId}
-          onChange={(event) => setSelectedCategoryId(event.target.value)}
+          onChange={(event) => {
+            const newCategoryId = event.target.value;
+            setSelectedCategoryId(newCategoryId);
+            const category = categories.find((c) => c.id === newCategoryId);
+            if (category?.type === "books" && !selectedBookSubcategoryId) {
+              setSelectedBookSubcategoryId(defaultBookSubcategoryId);
+            }
+          }}
         >
           <option value="" disabled>
             Select a category

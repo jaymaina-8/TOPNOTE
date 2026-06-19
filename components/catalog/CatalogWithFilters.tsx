@@ -94,6 +94,7 @@ export function CatalogWithFilters({
 
   useEffect(() => {
     const urlBookType = parseBookType(searchParams.get("bookType") ?? undefined, bookSubcategories.map((subcategory) => subcategory.slug));
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedBookType(urlBookType);
     // Intentionally react to URL changes only; state is otherwise controlled by tab clicks.
   }, [bookSubcategories, searchParams, searchParamsString]);
