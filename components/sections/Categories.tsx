@@ -52,9 +52,10 @@ function CategoryIcon({ slug }: { slug: string }) {
   }
 }
 
-function productsCategoryParam(slug: string): string {
-  if (slug === "lab-equipment") return "lab";
-  return slug;
+function categoryHref(slug: string): string {
+  if (slug === "exams") return "/exams";
+  if (slug === "lab-equipment") return "/products?category=lab";
+  return `/products?category=${slug}`;
 }
 
 export function Categories() {
@@ -69,7 +70,7 @@ export function Categories() {
           {categories.map((cat) => (
             <li key={cat.slug} className="flex">
               <Link
-                href={`/products?category=${productsCategoryParam(cat.slug)}`}
+                href={categoryHref(cat.slug)}
                 className="group relative flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-primary/10 bg-white p-7 shadow-[var(--shadow-sm)] transition-[transform,box-shadow,border-color] duration-300 ease-out before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-primary hover:-translate-y-1 hover:border-primary/25 hover:shadow-[var(--shadow-md)]"
               >
                 <div

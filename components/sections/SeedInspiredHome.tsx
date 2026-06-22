@@ -28,7 +28,7 @@ const productShowcase = [
     eyebrow: "For exams",
     title: "Practice Papers",
     text: "Exam sets and revision materials that help learners prepare with structure.",
-    href: "/products?category=exams",
+    href: "/exams",
     image: "/hero-books/hero-book-red.png",
   },
   {
@@ -61,7 +61,7 @@ const articleLinks = [
     label: "Study routine",
     title: "Why practice papers work best with a weekly routine",
     text: "Help learners revise in smaller, more consistent study blocks.",
-    href: "/products?category=exams",
+    href: "/exams",
     image: "/generated/topnote-note-study-routine.png",
     objectPosition: "center center",
   },

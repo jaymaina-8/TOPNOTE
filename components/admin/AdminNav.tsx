@@ -12,6 +12,8 @@ const links = [
   { href: "/dashboard", label: "Overview", short: "Home" },
   { href: "/dashboard/products", label: "Products", short: "Products" },
   { href: "/dashboard/categories", label: "Categories", short: "Categories" },
+  { href: "/dashboard/exams", label: "Exams", short: "Exams" },
+  { href: "/dashboard/orders", label: "Orders", short: "Orders" },
   { href: "/dashboard/testimonials", label: "Testimonials", short: "Quotes" },
   { href: "/dashboard/inquiries", label: "Inquiries", short: "Inquiries" },
   { href: "/dashboard/analytics", label: "Analytics", short: "Analytics" },

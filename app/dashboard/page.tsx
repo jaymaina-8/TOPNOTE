@@ -59,6 +59,8 @@ export default async function DashboardHomePage() {
               [
                 { href: "/dashboard/products", title: "Products", description: "List, create, edit, and remove catalog items." },
                 { href: "/dashboard/categories", title: "Categories", description: "Manage category names, slugs, and types." },
+                { href: "/dashboard/exams", title: "Exams", description: "Create exam sessions and manage per-class pricing." },
+                { href: "/dashboard/orders", title: "Orders", description: "Review exam orders, download PDFs, and update status." },
                 { href: "/dashboard/testimonials", title: "Testimonials", description: "Add or remove customer quotes on the home page." },
                 { href: "/dashboard/inquiries", title: "Inquiries", description: "Review form submissions and update status." },
                 { href: "/dashboard/analytics", title: "Analytics", description: "Conversion events and inquiry breakdowns." },

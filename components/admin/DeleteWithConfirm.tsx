@@ -7,11 +7,19 @@ type Props = {
   id: string;
   confirmMessage: string;
   children: ReactNode;
+  idFieldName?: string;
   /** Optional extra hidden fields (e.g. slug_hint for revalidation). */
   extraHidden?: Record<string, string>;
 };
 
-export function DeleteWithConfirm({ action, id, confirmMessage, children, extraHidden }: Props) {
+export function DeleteWithConfirm({
+  action,
+  id,
+  confirmMessage,
+  children,
+  idFieldName = "id",
+  extraHidden,
+}: Props) {
   return (
     <form
       action={action}
@@ -19,7 +27,7 @@ export function DeleteWithConfirm({ action, id, confirmMessage, children, extraH
         if (!confirm(confirmMessage)) e.preventDefault();
       }}
     >
-      <input type="hidden" name="id" value={id} />
+      <input type="hidden" name={idFieldName} value={id} />
       {extraHidden
         ? Object.entries(extraHidden).map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)
         : null}

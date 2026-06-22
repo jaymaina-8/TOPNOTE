@@ -14,7 +14,7 @@ export const productCardImageClass = "object-cover object-center transition-tran
  * 2 columns on phones; 3 from `lg` (desktop unchanged).
  */
 export const catalogProductGridClass =
-  "grid grid-cols-2 gap-3.5 gap-y-6 sm:gap-5 md:gap-7 lg:grid-cols-3 lg:gap-8";
+  "grid grid-cols-2 gap-3.5 gap-y-6 sm:grid-cols-3 sm:gap-5 md:gap-7 lg:grid-cols-4 lg:gap-8";
 
 /**
  * Home Featured Products: **2 columns on mobile** (2×2 for four items), 4 columns on large screens.
@@ -29,22 +29,22 @@ export const catalogCardBodyClass = "flex flex-1 flex-col p-4 px-3.5 sm:p-5";
 export const catalogCardBodyCompactClass = "flex flex-1 flex-col p-4 sm:p-5 max-sm:px-3.5";
 
 export const catalogCategoryLabelClass =
-  "text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500";
+  "text-[10px] font-semibold uppercase tracking-wider text-neutral-500/90";
 
 export const catalogProductTitleClass =
-  "mt-2 text-balance text-sm font-bold leading-tight tracking-tight text-neutral-900 max-sm:line-clamp-3 sm:mt-1.5 sm:text-base";
+  "mt-1.5 line-clamp-2 min-h-[2.5rem] text-balance text-sm font-bold leading-tight tracking-tight text-neutral-900 sm:min-h-[3rem] sm:text-base";
 
 /** Home featured strip — same title scale as catalog listing (2-col mobile). */
 export const catalogProductTitleCompactClass = catalogProductTitleClass;
 
 export const catalogProductDescriptionClass =
-  "mt-2 flex-1 text-[13px] leading-snug text-neutral-600 sm:mt-2 sm:text-sm sm:leading-relaxed";
+  "mt-2 line-clamp-3 flex-1 text-[13px] leading-snug text-neutral-600 sm:text-sm sm:leading-relaxed";
 
 export const catalogProductDescriptionCompactClass =
   "mt-1.5 flex-1 text-[13px] leading-snug text-neutral-600 sm:mt-2 sm:text-sm sm:leading-relaxed";
 
 export const catalogPriceClass =
-  "text-base font-bold tabular-nums tracking-tight text-neutral-950 sm:text-lg";
+  "text-lg font-extrabold tabular-nums tracking-tight text-neutral-950 sm:text-xl";
 
 export const catalogPriceCompactClass = catalogPriceClass;
 
