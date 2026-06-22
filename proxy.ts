@@ -6,7 +6,7 @@ import { updateSession } from "@/lib/supabase/middleware";
  * Supabase Auth: refresh session cookies and light route gating for `/login` and `/dashboard/*`.
  * Allowlist and full access checks live in `app/dashboard/layout.tsx` and server actions — not here.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { response, user } = await updateSession(request);
   const url = request.nextUrl.clone();
   const pathname = url.pathname;

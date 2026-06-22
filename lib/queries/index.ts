@@ -21,3 +21,12 @@ export {
 export { getTestimonials } from "./testimonials";
 export { createInquiry, getInquiries } from "./inquiries";
 export type { CreateInquiryResult, GetInquiriesResult, InquiryWithProduct } from "./inquiries";
+export {
+  getActiveExamSession,
+  getExamOrderByIdAdmin,
+  getExamOrderByIdPublic,
+  getExamOrders,
+  getExamSessionByIdAdmin,
+  listExamSessionsAdmin,
+} from "./exams";
+export { buildPriceMap } from "@/lib/exams/classes";

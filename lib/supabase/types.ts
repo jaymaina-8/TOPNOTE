@@ -29,6 +29,33 @@ export type SourceType = "product" | "contact" | "general";
 /** Conversion tracking event types we record in `conversion_events`. */
 export type ConversionEventType = "whatsapp_click" | "phone_click" | "inquiry_submit";
 
+/** Exam session workflow status (`exam_sessions.status`). */
+export type ExamSessionStatus = "draft" | "active" | "archived";
+
+/** Exam order workflow status (`exam_orders.status`). */
+export type ExamOrderStatus =
+  | "pending"
+  | "contacted"
+  | "confirmed"
+  | "processing"
+  | "delivered"
+  | "cancelled";
+
+/** Allowed values for `exam_session_prices.class_key`. */
+export type ExamClassKey =
+  | "playgroup"
+  | "pp1"
+  | "pp2"
+  | "grade_1"
+  | "grade_2"
+  | "grade_3"
+  | "grade_4"
+  | "grade_5"
+  | "grade_6"
+  | "grade_7"
+  | "grade_8"
+  | "grade_9";
+
 export type Database = {
   public: {
     Tables: {
@@ -240,6 +267,148 @@ export type Database = {
           },
         ];
       };
+      exam_sessions: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          status: ExamSessionStatus;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          slug: string;
+          status?: ExamSessionStatus;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          slug?: string;
+          status?: ExamSessionStatus;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      exam_session_prices: {
+        Row: {
+          id: string;
+          session_id: string;
+          class_key: ExamClassKey;
+          price: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          session_id: string;
+          class_key: ExamClassKey;
+          price: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          session_id?: string;
+          class_key?: ExamClassKey;
+          price?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "exam_session_prices_session_id_fkey";
+            columns: ["session_id"];
+            isOneToOne: false;
+            referencedRelation: "exam_sessions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      exam_orders: {
+        Row: {
+          id: string;
+          order_number: string;
+          session_id: string;
+          school_name: string;
+          contact_person: string;
+          phone: string;
+          county: string;
+          delivery_location: string;
+          additional_notes: string | null;
+          items: Json;
+          total_papers: number;
+          total_amount: number;
+          status: ExamOrderStatus;
+          pdf_storage_path: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_number: string;
+          session_id: string;
+          school_name: string;
+          contact_person: string;
+          phone: string;
+          county: string;
+          delivery_location: string;
+          additional_notes?: string | null;
+          items: Json;
+          total_papers?: number;
+          total_amount?: number;
+          status?: ExamOrderStatus;
+          pdf_storage_path?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          order_number?: string;
+          session_id?: string;
+          school_name?: string;
+          contact_person?: string;
+          phone?: string;
+          county?: string;
+          delivery_location?: string;
+          additional_notes?: string | null;
+          items?: Json;
+          total_papers?: number;
+          total_amount?: number;
+          status?: ExamOrderStatus;
+          pdf_storage_path?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "exam_orders_session_id_fkey";
+            columns: ["session_id"];
+            isOneToOne: false;
+            referencedRelation: "exam_sessions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      exam_order_counters: {
+        Row: {
+          year: number;
+          last_number: number;
+        };
+        Insert: {
+          year: number;
+          last_number?: number;
+        };
+        Update: {
+          year?: number;
+          last_number?: number;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -254,6 +423,10 @@ export type Database = {
       dashboard_source_page_breakdown: {
         Args: { limit_n: number };
         Returns: { source_page: string; event_count: number }[];
+      };
+      generate_exam_order_number: {
+        Args: Record<string, never>;
+        Returns: string;
       };
     };
     Enums: Record<string, never>;

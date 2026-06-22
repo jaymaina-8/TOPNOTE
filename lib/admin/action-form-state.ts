@@ -8,3 +8,6 @@ export const categoryFormInitialState: CategoryFormState = { error: null };
 
 export type TestimonialFormState = { error: string | null };
 export const testimonialFormInitialState: TestimonialFormState = { error: null };
+
+export type ExamFormState = { error: string | null; success?: boolean };
+export const examFormInitialState: ExamFormState = { error: null, success: false };

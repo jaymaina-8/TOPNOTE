@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 import { CatalogWithFilters } from "@/components/catalog/CatalogWithFilters";
 import { Container } from "@/components/ui/Container";
@@ -20,7 +21,7 @@ function categoryFromSearchParam(value: string | undefined): CategoryType | "all
 export const metadata: Metadata = {
   title: "Products",
   description:
-    "Browse books, exams, stationery, and lab equipment from TOPNOTE PUBLISHERS — transparent pricing and nationwide delivery.",
+    "Shop Top Note Workbooks, Assessment Books, Exams, Lab Equipment, and Stationery for schools, teachers, parents, and learners across Kenya.",
 };
 
 type PageProps = {
@@ -29,6 +30,9 @@ type PageProps = {
 
 export default async function ProductsPage({ searchParams }: PageProps) {
   const sp = await searchParams;
+  if (sp.category?.toLowerCase() === "exams") {
+    redirect("/exams");
+  }
   const initialCategoryType = categoryFromSearchParam(sp.category);
   const [products, categories, bookSubcategories] = await Promise.all([
     getAllProducts(),
