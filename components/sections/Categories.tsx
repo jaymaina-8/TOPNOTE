@@ -53,7 +53,7 @@ function CategoryIcon({ slug }: { slug: string }) {
 }
 
 function categoryHref(slug: string): string {
-  if (slug === "exams") return "/exams";
+  if (slug === "exams") return "/products?category=exams";
   if (slug === "lab-equipment") return "/products?category=lab";
   return `/products?category=${slug}`;
 }
