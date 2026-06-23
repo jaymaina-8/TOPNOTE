@@ -52,10 +52,9 @@ export async function getActiveExamSessionWithStatus(): Promise<ActiveExamSessio
     .eq("status", "active")
     .maybeSingle();
 
-  console.log("[getActiveExamSession] Active session result:", data);
-
+  console.log("[getActiveExamSession] Active session found?", !!data);
   if (error) {
-    console.error("[getActiveExamSession] Supabase error:", error);
+    console.error("[getActiveExamSession] Any Supabase errors:", error);
     return { session: null, error: error.message };
   }
 
@@ -64,11 +63,13 @@ export async function getActiveExamSessionWithStatus(): Promise<ActiveExamSessio
     return { session: null, error: null };
   }
 
+  console.log("[getActiveExamSession] Session ID:", data.id);
+  const pricingCount = data.exam_session_prices?.length ?? 0;
+  console.log("[getActiveExamSession] Number of pricing records:", pricingCount);
+
   const { exam_session_prices, ...session } = data as ExamSessionRow & {
     exam_session_prices: ExamSessionPriceRow[] | null;
   };
-
-  console.log("[getActiveExamSession] Price records result:", exam_session_prices);
 
   return {
     session: mapSessionWithPrices(session, exam_session_prices),

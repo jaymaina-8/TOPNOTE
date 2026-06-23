@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getActiveExamSessionWithStatus } from "@/lib/queries/exams";
 import Link from "next/link";
 
 import { CatalogWithFilters } from "@/components/catalog/CatalogWithFilters";
@@ -23,10 +24,11 @@ type PageProps = {
 
 export default async function ForSchoolsPage({ searchParams }: PageProps) {
   const sp = await searchParams;
-  const [products, categories, bookSubcategories] = await Promise.all([
+  const [products, categories, bookSubcategories, examSessionResult] = await Promise.all([
     getSchoolProducts(),
     getCategoriesByTypes([...ALL_CATALOG_CATEGORY_TYPES]),
     getBookSubcategories(),
+    getActiveExamSessionWithStatus(),
   ]);
   const initialBookType = parseBookType(sp.bookType, bookSubcategories.map((subcategory) => subcategory.slug));
 
@@ -100,6 +102,8 @@ export default async function ForSchoolsPage({ searchParams }: PageProps) {
               sourcePage="/for-schools"
               variant="school"
               initialBookType={initialBookType}
+              examSession={examSessionResult.session}
+              examSessionError={examSessionResult.error}
               className="mt-0"
             >
               <div className="max-w-2xl rounded-2xl bg-white px-4 py-3.5 text-sm leading-relaxed text-neutral-700 shadow-[var(--shadow-sm)]">

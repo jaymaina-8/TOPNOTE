@@ -12,6 +12,15 @@ import { sortCategoriesByDisplayOrder } from "@/lib/categories/display-order";
 import { parseBookType } from "@/lib/book-types";
 import { cn } from "@/lib/utils";
 import type { BookSubcategoryRow, BookTypeFilter, CategoryRow, CategoryType, ProductWithCategory } from "@/lib/supabase/types";
+import { ExamOrderExperience } from "@/components/exams/exam-order-experience";
+import type { ExamSessionWithPrices } from "@/lib/exams/types";
+
+function categoryFromSearchParam(value: string | undefined | null): CategoryType | "all" {
+  if (!value) return "all";
+  const s = value.toLowerCase();
+  if (s === "books" || s === "exams" || s === "stationery" || s === "lab") return s;
+  return "all";
+}
 
 function gradeSortKey(grade: string | null): number {
   if (grade == null || grade.trim() === "") return 10_000;
@@ -51,6 +60,8 @@ export type CatalogWithFiltersProps = {
   /** Optional content between filters and the grid (e.g. school pricing callout). */
   children?: ReactNode;
   className?: string;
+  examSession?: ExamSessionWithPrices | null;
+  examSessionError?: string | null;
 };
 
 function ListingCard({
@@ -81,6 +92,8 @@ export function CatalogWithFilters({
   initialBookType,
   children,
   className,
+  examSession,
+  examSessionError,
 }: CatalogWithFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -98,6 +111,30 @@ export function CatalogWithFilters({
     setSelectedBookType(urlBookType);
     // Intentionally react to URL changes only; state is otherwise controlled by tab clicks.
   }, [bookSubcategories, searchParams, searchParamsString]);
+
+  useEffect(() => {
+    const urlCategory = categoryFromSearchParam(searchParams.get("category"));
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedType(urlCategory);
+  }, [searchParams, searchParamsString]);
+
+  const updateCategoryType = (value: CategoryType | "all") => {
+    setSelectedType(value);
+
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === "all") {
+      params.delete("category");
+    } else {
+      params.set("category", value);
+    }
+    // Also clear bookType when category changes to anything other than books or all
+    if (value !== "books" && value !== "all") {
+      params.delete("bookType");
+    }
+
+    const nextUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+    router.replace(nextUrl, { scroll: false });
+  };
 
   const updateBookType = (value: BookTypeFilter) => {
     setSelectedBookType(value);
@@ -179,7 +216,7 @@ export function CatalogWithFilters({
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2 pt-4">
               <button
                 type="button"
-                onClick={() => setSelectedType("all")}
+                onClick={() => updateCategoryType("all")}
                 className={cn(
                   "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors shadow-[var(--shadow-sm)]",
                   selectedType === "all"
@@ -193,7 +230,7 @@ export function CatalogWithFilters({
                 <button
                   key={c.id}
                   type="button"
-                  onClick={() => setSelectedType(c.type)}
+                  onClick={() => updateCategoryType(c.type)}
                   className={cn(
                     "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors shadow-[var(--shadow-sm)]",
                     selectedType === c.type
@@ -211,7 +248,29 @@ export function CatalogWithFilters({
 
       {children}
 
-      {filtered.length === 0 ? (
+      {selectedType === "exams" ? (
+        <div className="mt-8 md:mt-10">
+          {examSessionError ? (
+            <div className="mx-auto max-w-2xl rounded-3xl border border-red-200 bg-red-50 px-6 py-10 text-center shadow-[var(--shadow-sm)]">
+              <h2 className="text-lg font-black text-red-950">Exam ordering is temporarily unavailable</h2>
+              <p className="mt-3 text-sm leading-relaxed text-red-900">
+                We could not load the active exam session right now. Please refresh the page in a moment or contact
+                TopNote Publishers on WhatsApp.
+              </p>
+            </div>
+          ) : !examSession ? (
+            <div className="mx-auto max-w-2xl rounded-3xl border border-amber-200 bg-amber-50 px-6 py-10 text-center shadow-[var(--shadow-sm)]">
+              <h2 className="text-lg font-black text-amber-950">Exam ordering is not open yet</h2>
+              <p className="mt-3 text-sm leading-relaxed text-amber-900">
+                There is no active exam session at the moment. Please contact TopNote Publishers on WhatsApp for
+                assistance or check back soon.
+              </p>
+            </div>
+          ) : (
+            <ExamOrderExperience session={examSession} />
+          )}
+        </div>
+      ) : filtered.length === 0 ? (
         <p className="mx-auto max-w-lg rounded-2xl bg-neutral-50/90 px-6 py-10 text-center text-sm leading-relaxed text-neutral-700 shadow-[var(--shadow-sm)]">
           No products match your search or category. Try another keyword or choose &quot;All&quot;.
         </p>

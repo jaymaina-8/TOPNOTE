@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { ExamOrderExperience } from "@/components/exams/ExamOrderExperience";
+import { ExamOrderExperience } from "@/components/exams/exam-order-experience";
 import { Container } from "@/components/ui/Container";
 import { PageIntro } from "@/components/ui/PageIntro";
 import { Section } from "@/components/ui/Section";
