@@ -36,7 +36,6 @@ export function NotificationBell() {
   } | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Initialize browser-only clients and audio context
   useEffect(() => {
@@ -44,7 +43,9 @@ export function NotificationBell() {
     // Let's create an elegant synth chime sound using the browser's AudioContext.
     const playChime = () => {
       try {
-        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+        const AudioCtx =
+          window.AudioContext ||
+          (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
         if (!AudioCtx) return;
         const ctx = new AudioCtx();
         
@@ -117,12 +118,12 @@ export function NotificationBell() {
             // Play chime sound and trigger slide-in toast
             playChime();
             
-            const meta = newNotif.metadata as Record<string, any>;
+            const meta = newNotif.metadata as Record<string, unknown>;
             setToast({
               id: newNotif.id,
               title: newNotif.title,
               message: newNotif.message,
-              orderId: meta?.order_id,
+              orderId: typeof meta?.order_id === "string" ? meta.order_id : undefined,
             });
           } else if (payload.eventType === "UPDATE") {
             const updatedNotif = payload.new as Notification;
