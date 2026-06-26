@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { updateSession } from "@/lib/supabase/middleware";
 import { consumeRateLimit } from "@/lib/security/rate-limiter";
-import { RATE_LIMIT_POLICIES } from "@/lib/security/config";
+import { RATE_LIMIT_POLICIES, type RateLimitPolicy } from "@/lib/security/config";
 
 /**
  * Root Middleware:
@@ -16,7 +16,7 @@ export async function proxy(request: NextRequest) {
   const pathname = url.pathname;
 
   // Determine policy based on route
-  let policy = RATE_LIMIT_POLICIES.globalPageLoad;
+  let policy: RateLimitPolicy = RATE_LIMIT_POLICIES.globalPageLoad;
   if (pathname.startsWith("/search")) {
     policy = RATE_LIMIT_POLICIES.search;
   } else if (pathname.startsWith("/dashboard/api") || pathname.startsWith("/api/dashboard")) {
