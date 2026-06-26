@@ -5,7 +5,6 @@ import autoTable from "jspdf-autotable";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { getExamClassLabel } from "@/lib/exams/classes";
 import type { ExamOrderItem, ExamOrderWithSession } from "@/lib/exams/types";
 import { formatKesPrice } from "@/lib/format";
 import { PHONE_DISPLAY } from "@/lib/whatsapp";
@@ -161,8 +160,4 @@ export async function generateExamOrderPdf(order: ExamOrderWithSession): Promise
   doc.text(`Contact: ${PHONE_DISPLAY} | WhatsApp available`, margin, y);
 
   return new Uint8Array(doc.output("arraybuffer"));
-}
-
-export function examOrderPdfStoragePath(orderNumber: string): string {
-  return `${orderNumber.replace(/[^a-zA-Z0-9-]/g, "_")}.pdf`;
 }

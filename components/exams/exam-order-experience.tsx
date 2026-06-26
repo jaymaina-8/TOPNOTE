@@ -1,8 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { EXAM_CLASSES, buildPriceMap } from "@/lib/exams/classes";
 import type { ExamSessionWithPrices } from "@/lib/exams/types";
+import {
+  clearDraft,
+  clearGeneratedOrder,
+  loadDraft,
+  loadGeneratedOrder,
+  saveDraft,
+  saveGeneratedOrder,
+  type GeneratedExamOrder,
+} from "@/lib/exams/draft-storage";
 import { ExamPricingTable } from "./exam-pricing-table";
 import { ExamOrderForm } from "./exam-order-form";
 
@@ -12,6 +21,15 @@ type ExamOrderExperienceProps = {
 
 export function ExamOrderExperience({ session }: ExamOrderExperienceProps) {
   const priceMap = useMemo(() => buildPriceMap(session.prices), [session.prices]);
+  const [schoolName, setSchoolName] = useState("");
+  const [contactPerson, setContactPerson] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [county, setCounty] = useState("");
+  const [deliveryLocation, setDeliveryLocation] = useState("");
+  const [additionalNotes, setAdditionalNotes] = useState("");
+  const [draftRestored, setDraftRestored] = useState(false);
+  const [generatedOrder, setGeneratedOrder] = useState<GeneratedExamOrder | null>(null);
+  const [didHydrate, setDidHydrate] = useState(false);
   const [quantities, setQuantities] = useState<Record<string, number>>(() =>
     EXAM_CLASSES.reduce(
       (acc, item) => {
@@ -21,6 +39,64 @@ export function ExamOrderExperience({ session }: ExamOrderExperienceProps) {
       {} as Record<string, number>,
     ),
   );
+
+  useEffect(() => {
+    const hydrateTimeout = window.setTimeout(() => {
+      const draft = loadDraft();
+      if (draft) {
+        setSchoolName(draft.schoolName ?? "");
+        setContactPerson(draft.contactPerson ?? "");
+        setPhoneNumber(draft.phoneNumber ?? "");
+        setCounty(draft.county ?? "");
+        setDeliveryLocation(draft.deliveryLocation ?? "");
+        setAdditionalNotes(draft.additionalNotes ?? "");
+        setQuantities((current) => {
+          const next = { ...current };
+          for (const item of EXAM_CLASSES) {
+            const quantity = Number(draft.quantities?.[item.key] ?? 0);
+            next[item.key] = Number.isFinite(quantity) && quantity > 0 ? Math.floor(quantity) : 0;
+          }
+          return next;
+        });
+        setDraftRestored(true);
+      }
+
+      setGeneratedOrder(loadGeneratedOrder());
+      setDidHydrate(true);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(hydrateTimeout);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!didHydrate) return;
+    const timeout = window.setTimeout(() => {
+      saveDraft({
+        schoolName,
+        contactPerson,
+        phoneNumber,
+        county,
+        deliveryLocation,
+        additionalNotes,
+        quantities,
+      });
+    }, 500);
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [
+    didHydrate,
+    schoolName,
+    contactPerson,
+    phoneNumber,
+    county,
+    deliveryLocation,
+    additionalNotes,
+    quantities,
+  ]);
 
   const totals = useMemo(() => {
     let totalPapers = 0;
@@ -44,6 +120,33 @@ export function ExamOrderExperience({ session }: ExamOrderExperienceProps) {
     }));
   };
 
+  const handleGeneratedOrder = useCallback((order: GeneratedExamOrder) => {
+    setGeneratedOrder(order);
+    saveGeneratedOrder(order);
+  }, []);
+
+  const handleStartNewOrder = useCallback(() => {
+    clearDraft();
+    clearGeneratedOrder();
+    setGeneratedOrder(null);
+    setDraftRestored(false);
+    setSchoolName("");
+    setContactPerson("");
+    setPhoneNumber("");
+    setCounty("");
+    setDeliveryLocation("");
+    setAdditionalNotes("");
+    setQuantities(
+      EXAM_CLASSES.reduce(
+        (acc, item) => {
+          acc[item.key] = 0;
+          return acc;
+        },
+        {} as Record<string, number>,
+      ),
+    );
+  }, []);
+
   return (
     <div className="space-y-10 md:space-y-12">
       {/* Current Exam Session Section with Pricing Table */}
@@ -63,9 +166,25 @@ export function ExamOrderExperience({ session }: ExamOrderExperienceProps) {
       <ExamOrderForm
         session={session}
         priceMap={priceMap}
+        schoolName={schoolName}
+        contactPerson={contactPerson}
+        phoneNumber={phoneNumber}
+        county={county}
+        deliveryLocation={deliveryLocation}
+        additionalNotes={additionalNotes}
+        onSchoolNameChange={setSchoolName}
+        onContactPersonChange={setContactPerson}
+        onPhoneNumberChange={setPhoneNumber}
+        onCountyChange={setCounty}
+        onDeliveryLocationChange={setDeliveryLocation}
+        onAdditionalNotesChange={setAdditionalNotes}
         quantities={quantities}
         updateQuantity={updateQuantity}
         totals={totals}
+        generatedOrder={generatedOrder}
+        draftRestored={draftRestored}
+        onGeneratedOrder={handleGeneratedOrder}
+        onStartNewOrder={handleStartNewOrder}
       />
     </div>
   );
