@@ -11,7 +11,7 @@ import { RATE_LIMIT_POLICIES } from "@/lib/security/config";
  */
 export async function proxy(request: NextRequest) {
   // 1. Rate Limiting
-  const ip = request.ip ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "127.0.0.1";
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "127.0.0.1";
   const url = request.nextUrl.clone();
   const pathname = url.pathname;
 
