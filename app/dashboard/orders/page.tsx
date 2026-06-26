@@ -104,7 +104,7 @@ export default async function DashboardOrdersPage({ searchParams }: PageProps) {
                 <tr key={order.id} className="border-b border-neutral-100 last:border-0">
                   <td className="px-4 py-4 align-top">
                     <p className="font-bold text-neutral-950">{order.order_number}</p>
-                    <p className="mt-1 text-xs text-neutral-500">{order.total_papers} papers</p>
+                    <p className="mt-1 text-xs text-neutral-500">{order.total_papers} students</p>
                   </td>
                   <td className="px-4 py-4 align-top">
                     <p className="font-medium text-neutral-900">{order.school_name}</p>

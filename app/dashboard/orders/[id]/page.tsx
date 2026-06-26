@@ -83,7 +83,7 @@ export default async function DashboardOrderDetailPage({ params }: PageProps) {
           <div className="border-b border-neutral-100 px-4 py-4">
             <h2 className="text-lg font-black text-neutral-950">Order breakdown</h2>
             <p className="mt-1 text-sm text-neutral-600">
-              {order.total_papers} papers · {formatKesPrice(Number(order.total_amount))} ·{" "}
+              {order.total_papers} students · {formatKesPrice(Number(order.total_amount))} ·{" "}
               <span className="font-bold capitalize">{order.status}</span>
             </p>
           </div>
@@ -93,7 +93,7 @@ export default async function DashboardOrderDetailPage({ params }: PageProps) {
                 <tr>
                   <th className="px-4 py-3 text-left">Class</th>
                   <th className="px-4 py-3 text-left">Unit price</th>
-                  <th className="px-4 py-3 text-left">Qty</th>
+                  <th className="px-4 py-3 text-left">No. of Students</th>
                   <th className="px-4 py-3 text-left">Line total</th>
                 </tr>
               </thead>

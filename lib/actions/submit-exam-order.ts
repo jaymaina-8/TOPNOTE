@@ -6,7 +6,7 @@ import { headers } from "next/headers";
 import { generateExamOrderPdf } from "@/lib/exams/pdf";
 import { createExamOrderWhatsAppLink } from "@/lib/exams/whatsapp";
 import type { ExamOrderWithSession } from "@/lib/exams/types";
-import { getPdfStoragePath, uploadExamPdf } from "@/lib/storage/pdf";
+import { getPdfStoragePath, uploadExamPdf, createExamPdfSignedUrl } from "@/lib/storage/pdf";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -136,10 +136,17 @@ export async function submitExamOrderAction(
   const storagePath = getPdfStoragePath();
 
   const uploadResult = await uploadExamPdf(admin, storagePath, pdfBytes);
+  let pdfUrl: string | null = null;
   if (!uploadResult.ok) {
     console.error("[submitExamOrderAction] pdf upload", uploadResult.error);
   } else {
     await admin.from("exam_orders").update({ pdf_storage_path: storagePath }).eq("id", order.id);
+    const urlResult = await createExamPdfSignedUrl(admin, storagePath);
+    if (urlResult.ok) {
+      pdfUrl = urlResult.signedUrl;
+    } else {
+      console.error("[submitExamOrderAction] signed url", urlResult.error);
+    }
   }
 
   revalidatePath("/dashboard/orders");
@@ -148,7 +155,7 @@ export async function submitExamOrderAction(
     status: "success",
     orderId: order.id,
     orderNumber,
-    pdfUrl: null,
+    pdfUrl,
     whatsappUrl: createExamOrderWhatsAppLink({
       orderNumber,
       schoolName: validated.data.schoolName,

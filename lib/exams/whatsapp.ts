@@ -18,7 +18,7 @@ export function examOrderWhatsAppMessage(input: ExamOrderWhatsAppInput): string 
     `Order Number: ${input.orderNumber}`,
     `School Name: ${input.schoolName}`,
     `Exam Session: ${input.sessionName}`,
-    `Total Papers: ${input.totalPapers}`,
+    `Total Students: ${input.totalPapers}`,
     `Total Amount: ${formatKesPrice(input.totalAmount)}`,
   ].join("\n");
 }

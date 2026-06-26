@@ -119,7 +119,7 @@ export async function generateExamOrderPdf(order: ExamOrderWithSession): Promise
   autoTable(doc, {
     startY: y + 8,
     margin: { left: margin, right: margin },
-    head: [["Class", "Unit Price", "Quantity", "Line Total"]],
+    head: [["Class", "Unit Price", "No. of Students", "Line Total"]],
     body: lineItems.map((item) => [
       item.class_label,
       formatKesPrice(item.unit_price),
@@ -140,7 +140,7 @@ export async function generateExamOrderPdf(order: ExamOrderWithSession): Promise
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
-  doc.text(`Total Papers: ${order.total_papers}`, margin, y);
+  doc.text(`Total Students: ${order.total_papers}`, margin, y);
   y += 18;
   doc.setFontSize(14);
   doc.setTextColor(...BRAND_RED);

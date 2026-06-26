@@ -125,36 +125,108 @@ export function ExamOrderForm({
       ) : null}
 
       {activeOrder ? (
-        <div className="mb-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 sm:p-6">
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-emerald-800">
-            {showingRecoveredOrder ? "You have a recent order." : "Order created successfully"}
-          </p>
-          <p className="mt-2 text-2xl font-black text-emerald-950">{activeOrder.orderNumber}</p>
-          <p className="mt-2 text-sm text-emerald-900">
-            {schoolName || "Your school"} · {activeOrder.sessionName}
-          </p>
-          <p className="mt-1 text-sm text-emerald-900">
-            {activeOrder.totalPapers} papers · {formatKesPrice(activeOrder.totalAmount)}
-          </p>
-          <p className="mt-3 rounded-lg border border-emerald-200 bg-white/80 px-3 py-2 text-xs leading-relaxed text-emerald-900">
-            WhatsApp does not allow websites to attach files automatically. Dashboard administrators can download the PDF from the orders dashboard and share it when needed.
-          </p>
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-            <a
-              href={activeOrder.whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#25D366] px-5 text-sm font-bold text-white transition hover:bg-[#1fb855]"
-            >
-              Send via WhatsApp
-            </a>
-            <button
-              type="button"
-              onClick={onStartNewOrder}
-              className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-300 bg-white px-5 text-sm font-bold text-emerald-900 transition hover:bg-emerald-100"
-            >
-              {showingRecoveredOrder ? "Clear Order" : "Start New Order"}
-            </button>
+        <div className="mb-8 space-y-6">
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 sm:p-6">
+            <div className="flex items-start gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-emerald-950">Thank You!</h3>
+                <div className="mt-2 space-y-2 text-sm leading-relaxed text-emerald-900">
+                  <p>Your exam order has been received successfully by TopNote Publishers.</p>
+                  <p>Your order has been recorded and is now awaiting payment confirmation.</p>
+                  <p>Please complete your payment using the details below.</p>
+                  <p>Once payment has been received, our team will begin processing your order and will contact you if any clarification is required.</p>
+                  <p>Thank you for choosing TopNote Publishers.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-5 sm:p-6">
+            <p className="text-sm font-bold uppercase tracking-[0.14em] text-emerald-800">
+              {showingRecoveredOrder ? "Recent Order" : "Order Summary"}
+            </p>
+            <p className="mt-2 text-2xl font-black text-emerald-950">{activeOrder.orderNumber}</p>
+            <p className="mt-2 text-sm text-emerald-900">
+              {schoolName || "Your school"} · {activeOrder.sessionName}
+            </p>
+            <p className="mt-1 text-sm text-emerald-900">
+              {activeOrder.totalPapers} students · {formatKesPrice(activeOrder.totalAmount)}
+            </p>
+            <p className="mt-3 rounded-lg border border-emerald-200/60 bg-white/60 px-3 py-2 text-xs leading-relaxed text-emerald-900">
+              WhatsApp does not allow websites to attach files automatically. You can download the PDF below and attach it manually to your WhatsApp message.
+            </p>
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+              {activeOrder.pdfUrl ? (
+                <a
+                  href={activeOrder.pdfUrl}
+                  download
+                  className="inline-flex min-h-12 items-center justify-center rounded-xl bg-primary px-5 text-sm font-bold text-white transition hover:bg-primary/90"
+                >
+                  Download PDF
+                </a>
+              ) : null}
+              <a
+                href={activeOrder.whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#25D366] px-5 text-sm font-bold text-white transition hover:bg-[#1fb855]"
+              >
+                Send via WhatsApp
+              </a>
+              <button
+                type="button"
+                onClick={onStartNewOrder}
+                className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-300 bg-white px-5 text-sm font-bold text-emerald-900 transition hover:bg-emerald-100"
+              >
+                Start New Order
+              </button>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 sm:p-6">
+            <h3 className="text-lg font-bold text-blue-950 mb-3">Payment Details</h3>
+            <p className="text-sm text-blue-900 mb-5">
+              Please complete your payment using the details below.
+            </p>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between rounded-xl bg-white p-4 shadow-sm border border-blue-100">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-neutral-500">PAYBILL</p>
+                  <p className="mt-1 font-mono text-xl font-black text-neutral-900">247247</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigator.clipboard.writeText("247247")}
+                  className="flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-sm font-bold text-blue-700 transition hover:bg-blue-100"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Copy
+                </button>
+              </div>
+              <div className="flex items-center justify-between rounded-xl bg-white p-4 shadow-sm border border-blue-100">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-neutral-500">ACCOUNT NUMBER</p>
+                  <p className="mt-1 font-mono text-xl font-black text-neutral-900">0712430992</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigator.clipboard.writeText("0712430992")}
+                  className="flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-sm font-bold text-blue-700 transition hover:bg-blue-100"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Copy
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       ) : null}
@@ -291,7 +363,7 @@ export function ExamOrderForm({
                 <tr>
                   <th className="px-6 py-4">Class</th>
                   <th className="px-6 py-4">Unit Price</th>
-                  <th className="px-6 py-4 text-center">Quantity Needed</th>
+                  <th className="px-6 py-4 text-center">No. of Students</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100 bg-white">
@@ -330,7 +402,7 @@ export function ExamOrderForm({
               <p className="text-xs font-bold uppercase tracking-wider text-neutral-500">Order Totals</p>
               <div className="mt-1.5 flex items-baseline gap-2">
                 <span className="text-3xl font-black tracking-tight text-primary">{formatKesPrice(totals.totalAmount)}</span>
-                <span className="text-sm font-semibold text-neutral-500">({totals.totalPapers} Papers)</span>
+                <span className="text-sm font-semibold text-neutral-500">({totals.totalPapers} Students)</span>
               </div>
               <p className="mt-1 text-[11px] text-neutral-400">Estimated total updates instantly.</p>
             </div>
