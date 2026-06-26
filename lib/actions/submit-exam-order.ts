@@ -1,10 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 
-import { examOrderPdfStoragePath, generateExamOrderPdf } from "@/lib/exams/pdf";
+import { generateExamOrderPdf } from "@/lib/exams/pdf";
 import { createExamOrderWhatsAppLink } from "@/lib/exams/whatsapp";
 import type { ExamOrderWithSession } from "@/lib/exams/types";
+import { getPdfStoragePath, uploadExamPdf } from "@/lib/storage/pdf";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -12,6 +14,9 @@ import {
   parseExamOrderQuantitiesFromFormData,
   validateExamOrderInput,
 } from "@/lib/validation/exam-order";
+import { consumeRateLimit } from "@/lib/security/rate-limiter";
+import { RATE_LIMIT_POLICIES, ABUSE_SETTINGS } from "@/lib/security/config";
+import { trackBlocked } from "@/lib/security/monitoring";
 
 export type SubmitExamOrderState =
   | { status: "idle" }
@@ -20,8 +25,10 @@ export type SubmitExamOrderState =
       status: "success";
       orderId: string;
       orderNumber: string;
-      pdfUrl: string;
+      pdfUrl: string | null;
       whatsappUrl: string;
+      sessionName: string;
+      schoolName: string;
       totalAmount: number;
       totalPapers: number;
     };
@@ -30,6 +37,18 @@ export async function submitExamOrderAction(
   _prev: SubmitExamOrderState,
   formData: FormData,
 ): Promise<SubmitExamOrderState> {
+  const reqHeaders = await headers();
+  const rawIp = reqHeaders.get("x-forwarded-for")?.split(",")[0] ||
+                reqHeaders.get("x-real-ip") ||
+                "127.0.0.1";
+  const ip = rawIp.trim();
+
+  const rateLimitResult = await consumeRateLimit(ip, RATE_LIMIT_POLICIES.examOrderSubmit);
+  if (!rateLimitResult.allowed) {
+    await trackBlocked(ip, "/submit-exam-order", "exam_order_rate_limit_exceeded");
+    return { status: "error", error: `You are submitting orders too quickly. Please try again in ${rateLimitResult.retryAfter} seconds.` };
+  }
+
   const validated = validateExamOrderInput({
     sessionId: formData.get("session_id")?.toString() ?? "",
     schoolName: formData.get("school_name")?.toString() ?? "",
@@ -67,6 +86,20 @@ export async function submitExamOrderAction(
     return { status: "error", error: "Order processing is not configured on this server." };
   }
 
+  const duplicateTimeThreshold = new Date(Date.now() - ABUSE_SETTINGS.duplicateOrderWindowSeconds * 1000).toISOString();
+  const { data: duplicates } = await admin
+    .from("exam_orders")
+    .select("id")
+    .eq("session_id", validated.data.sessionId)
+    .eq("school_name", validated.data.schoolName)
+    .gte("created_at", duplicateTimeThreshold)
+    .limit(1);
+
+  if (duplicates && duplicates.length > 0) {
+    await trackBlocked(ip, "/submit-exam-order", "duplicate_order_blocked", { school: validated.data.schoolName });
+    return { status: "error", error: "An order for this school was recently submitted. Please wait a few minutes." };
+  }
+
   const { data: orderNumberData, error: orderNumberError } = await admin.rpc("generate_exam_order_number");
   if (orderNumberError || !orderNumberData) {
     console.error("[submitExamOrderAction] order number", orderNumberError?.message);
@@ -100,22 +133,14 @@ export async function submitExamOrderAction(
 
   const order = inserted as ExamOrderWithSession;
   const pdfBytes = await generateExamOrderPdf(order);
-  const storagePath = examOrderPdfStoragePath(orderNumber);
+  const storagePath = getPdfStoragePath();
 
-  const { error: uploadError } = await admin.storage.from("exam-order-pdfs").upload(storagePath, pdfBytes, {
-    contentType: "application/pdf",
-    upsert: true,
-  });
-
-  if (uploadError) {
-    console.error("[submitExamOrderAction] pdf upload", uploadError.message);
+  const uploadResult = await uploadExamPdf(admin, storagePath, pdfBytes);
+  if (!uploadResult.ok) {
+    console.error("[submitExamOrderAction] pdf upload", uploadResult.error);
   } else {
     await admin.from("exam_orders").update({ pdf_storage_path: storagePath }).eq("id", order.id);
   }
-
-  const { data: signedUrlData } = await admin.storage
-    .from("exam-order-pdfs")
-    .createSignedUrl(storagePath, 60 * 60 * 24 * 7);
 
   revalidatePath("/dashboard/orders");
 
@@ -123,13 +148,16 @@ export async function submitExamOrderAction(
     status: "success",
     orderId: order.id,
     orderNumber,
-    pdfUrl: signedUrlData?.signedUrl ?? `/api/exam-orders/${order.id}/pdf`,
+    pdfUrl: null,
     whatsappUrl: createExamOrderWhatsAppLink({
       orderNumber,
       schoolName: validated.data.schoolName,
       sessionName: activeSession.name,
+      totalPapers: validated.data.totalPapers,
       totalAmount: validated.data.totalAmount,
     }),
+    sessionName: activeSession.name,
+    schoolName: validated.data.schoolName,
     totalAmount: validated.data.totalAmount,
     totalPapers: validated.data.totalPapers,
   };

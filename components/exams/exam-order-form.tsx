@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useMemo } from "react";
 import { submitExamOrderAction, type SubmitExamOrderState } from "@/lib/actions/submit-exam-order";
+import type { GeneratedExamOrder } from "@/lib/exams/draft-storage";
 import { EXAM_CLASSES } from "@/lib/exams/classes";
 import { formatKesPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -18,19 +19,83 @@ const qtyInputClass =
 type ExamOrderFormProps = {
   session: ExamSessionWithPrices;
   priceMap: Record<string, number>;
+  schoolName: string;
+  contactPerson: string;
+  phoneNumber: string;
+  county: string;
+  deliveryLocation: string;
+  additionalNotes: string;
+  onSchoolNameChange: (value: string) => void;
+  onContactPersonChange: (value: string) => void;
+  onPhoneNumberChange: (value: string) => void;
+  onCountyChange: (value: string) => void;
+  onDeliveryLocationChange: (value: string) => void;
+  onAdditionalNotesChange: (value: string) => void;
   quantities: Record<string, number>;
   updateQuantity: (classKey: string, value: string) => void;
   totals: { totalPapers: number; totalAmount: number };
+  generatedOrder: GeneratedExamOrder | null;
+  draftRestored: boolean;
+  onGeneratedOrder: (order: GeneratedExamOrder) => void;
+  onStartNewOrder: () => void;
 };
 
 export function ExamOrderForm({
   session,
   priceMap,
+  schoolName,
+  contactPerson,
+  phoneNumber,
+  county,
+  deliveryLocation,
+  additionalNotes,
+  onSchoolNameChange,
+  onContactPersonChange,
+  onPhoneNumberChange,
+  onCountyChange,
+  onDeliveryLocationChange,
+  onAdditionalNotesChange,
   quantities,
   updateQuantity,
   totals,
+  generatedOrder,
+  draftRestored,
+  onGeneratedOrder,
+  onStartNewOrder,
 }: ExamOrderFormProps) {
   const [state, formAction, pending] = useActionState(submitExamOrderAction, initialState);
+
+  useEffect(() => {
+    if (state.status !== "success") return;
+    onGeneratedOrder({
+      orderId: state.orderId,
+      orderNumber: state.orderNumber,
+      sessionName: state.sessionName,
+      totalPapers: state.totalPapers,
+      totalAmount: state.totalAmount,
+      pdfUrl: state.pdfUrl,
+      whatsappUrl: state.whatsappUrl,
+      timestamp: Date.now(),
+    });
+  }, [state, onGeneratedOrder]);
+
+  const activeOrder = useMemo<GeneratedExamOrder | null>(() => {
+    if (state.status === "success") {
+      return {
+        orderId: state.orderId,
+        orderNumber: state.orderNumber,
+        sessionName: state.sessionName,
+        totalPapers: state.totalPapers,
+        totalAmount: state.totalAmount,
+        pdfUrl: state.pdfUrl,
+        whatsappUrl: state.whatsappUrl,
+        timestamp: generatedOrder?.orderId === state.orderId ? generatedOrder.timestamp : 0,
+      };
+    }
+    return generatedOrder;
+  }, [generatedOrder, state]);
+
+  const showingRecoveredOrder = state.status !== "success" && Boolean(generatedOrder);
 
   return (
     <section className="overflow-hidden rounded-3xl border border-neutral-200 border-t-4 border-t-primary bg-white p-5 shadow-[var(--shadow-sm)] sm:p-8">
@@ -53,28 +118,43 @@ export function ExamOrderForm({
         </div>
       </div>
 
-      {state.status === "success" ? (
+      {draftRestored ? (
+        <div className="mb-6 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900" role="status">
+          Draft restored successfully.
+        </div>
+      ) : null}
+
+      {activeOrder ? (
         <div className="mb-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 sm:p-6">
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-emerald-800">Order generated</p>
-          <p className="mt-2 text-2xl font-black text-emerald-950">{state.orderNumber}</p>
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-emerald-800">
+            {showingRecoveredOrder ? "You have a recent order." : "Order created successfully"}
+          </p>
+          <p className="mt-2 text-2xl font-black text-emerald-950">{activeOrder.orderNumber}</p>
           <p className="mt-2 text-sm text-emerald-900">
-            {state.totalPapers} papers � {formatKesPrice(state.totalAmount)}
+            {schoolName || "Your school"} · {activeOrder.sessionName}
+          </p>
+          <p className="mt-1 text-sm text-emerald-900">
+            {activeOrder.totalPapers} papers · {formatKesPrice(activeOrder.totalAmount)}
+          </p>
+          <p className="mt-3 rounded-lg border border-emerald-200 bg-white/80 px-3 py-2 text-xs leading-relaxed text-emerald-900">
+            WhatsApp does not allow websites to attach files automatically. Dashboard administrators can download the PDF from the orders dashboard and share it when needed.
           </p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <a
-              href={state.pdfUrl}
-              className="inline-flex min-h-12 items-center justify-center rounded-xl bg-neutral-950 px-5 text-sm font-bold text-white transition hover:bg-neutral-800"
-            >
-              Download PDF
-            </a>
-            <a
-              href={state.whatsappUrl}
+              href={activeOrder.whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#25D366] px-5 text-sm font-bold text-white transition hover:bg-[#1fb855]"
             >
               Send via WhatsApp
             </a>
+            <button
+              type="button"
+              onClick={onStartNewOrder}
+              className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-300 bg-white px-5 text-sm font-bold text-emerald-900 transition hover:bg-emerald-100"
+            >
+              {showingRecoveredOrder ? "Clear Order" : "Start New Order"}
+            </button>
           </div>
         </div>
       ) : null}
@@ -103,7 +183,16 @@ export function ExamOrderForm({
               <label htmlFor="school_name" className="block text-xs font-bold uppercase tracking-wider text-neutral-700">
                 School Name <span className="text-red-600">*</span>
               </label>
-              <input id="school_name" name="school_name" required className={cn(inputClass, "mt-1.5 focus:bg-white")} disabled={pending} placeholder="e.g. Greenwood Academy" />
+              <input
+                id="school_name"
+                name="school_name"
+                required
+                className={cn(inputClass, "mt-1.5 focus:bg-white")}
+                disabled={pending}
+                placeholder="e.g. Greenwood Academy"
+                value={schoolName}
+                onChange={(event) => onSchoolNameChange(event.target.value)}
+              />
             </div>
             <div>
               <label htmlFor="contact_person" className="block text-xs font-bold uppercase tracking-wider text-neutral-700">
@@ -116,6 +205,8 @@ export function ExamOrderForm({
                 className={cn(inputClass, "mt-1.5 focus:bg-white")}
                 disabled={pending}
                 placeholder="e.g. Principal / Head Teacher"
+                value={contactPerson}
+                onChange={(event) => onContactPersonChange(event.target.value)}
               />
             </div>
             <div>
@@ -130,13 +221,24 @@ export function ExamOrderForm({
                 className={cn(inputClass, "mt-1.5 focus:bg-white")}
                 disabled={pending}
                 placeholder="e.g. 0712345678"
+                value={phoneNumber}
+                onChange={(event) => onPhoneNumberChange(event.target.value)}
               />
             </div>
             <div>
               <label htmlFor="county" className="block text-xs font-bold uppercase tracking-wider text-neutral-700">
                 County <span className="text-red-600">*</span>
               </label>
-              <input id="county" name="county" required className={cn(inputClass, "mt-1.5 focus:bg-white")} disabled={pending} placeholder="e.g. Nairobi" />
+              <input
+                id="county"
+                name="county"
+                required
+                className={cn(inputClass, "mt-1.5 focus:bg-white")}
+                disabled={pending}
+                placeholder="e.g. Nairobi"
+                value={county}
+                onChange={(event) => onCountyChange(event.target.value)}
+              />
             </div>
             <div className="md:col-span-2">
               <label htmlFor="delivery_location" className="block text-xs font-bold uppercase tracking-wider text-neutral-700">
@@ -149,6 +251,8 @@ export function ExamOrderForm({
                 className={cn(inputClass, "mt-1.5 focus:bg-white")}
                 disabled={pending}
                 placeholder="e.g. Town, Street, or Landmark"
+                value={deliveryLocation}
+                onChange={(event) => onDeliveryLocationChange(event.target.value)}
               />
             </div>
           </div>
@@ -168,6 +272,8 @@ export function ExamOrderForm({
               className={cn(inputClass, "min-h-[90px] resize-y focus:bg-white")}
               disabled={pending}
               placeholder="List any specific guidelines, packaging preferences, or requests here..."
+              value={additionalNotes}
+              onChange={(event) => onAdditionalNotesChange(event.target.value)}
             />
           </div>
         </div>
@@ -233,7 +339,7 @@ export function ExamOrderForm({
               disabled={pending || totals.totalPapers === 0}
               className="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-neutral-950 px-8 text-sm font-bold text-white transition hover:bg-neutral-800 hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:scale-100 sm:w-auto shadow-md"
             >
-              {pending ? "Generating order�" : "Generate order"}
+              {pending ? "Generating order..." : "Generate order"}
             </button>
           </div>
         </div>

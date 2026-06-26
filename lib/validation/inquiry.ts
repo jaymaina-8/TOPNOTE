@@ -57,6 +57,11 @@ export function validateInquiryInput(input: {
     return { ok: false, error: "Phone number is too long." };
   }
 
+  const PHONE_RE = /^[+\d\s().-]{7,25}$/;
+  if (phoneTrimmed && !PHONE_RE.test(phoneTrimmed)) {
+    return { ok: false, error: "Please enter a valid phone number (7 to 25 characters, e.g. +254700000000)." };
+  }
+
   let sourceProductId: string | null = null;
   if (sourceRaw) {
     if (!UUID_RE.test(sourceRaw)) {

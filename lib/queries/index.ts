@@ -24,7 +24,6 @@ export type { CreateInquiryResult, GetInquiriesResult, InquiryWithProduct } from
 export {
   getActiveExamSession,
   getExamOrderByIdAdmin,
-  getExamOrderByIdPublic,
   getExamOrders,
   getExamSessionByIdAdmin,
   listExamSessionsAdmin,

@@ -7,8 +7,9 @@ import type {
   ExamSessionRow,
   ExamSessionWithPrices,
 } from "@/lib/exams/types";
-import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
+
 
 function mapSessionPrices(prices: ExamSessionPriceRow[] | null | undefined): ExamSessionPriceRow[] {
   return (prices ?? []).slice().sort((a, b) => {
@@ -143,20 +144,6 @@ export async function getExamOrderByIdAdmin(id: string): Promise<ExamOrderWithSe
   if (!admin) return null;
 
   const { data, error } = await admin
-    .from("exam_orders")
-    .select("*, exam_sessions(id, name, slug)")
-    .eq("id", id)
-    .maybeSingle();
-
-  if (error || !data) return null;
-  return data as ExamOrderWithSession;
-}
-
-export async function getExamOrderByIdPublic(id: string): Promise<ExamOrderWithSession | null> {
-  const supabase = await createClient();
-  if (!supabase) return null;
-
-  const { data, error } = await supabase
     .from("exam_orders")
     .select("*, exam_sessions(id, name, slug)")
     .eq("id", id)

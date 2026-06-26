@@ -5,6 +5,7 @@ type ExamOrderWhatsAppInput = {
   orderNumber: string;
   schoolName: string;
   sessionName: string;
+  totalPapers: number;
   totalAmount: number;
 };
 
@@ -12,14 +13,13 @@ export function examOrderWhatsAppMessage(input: ExamOrderWhatsAppInput): string 
   return [
     "Hello TopNote Publishers,",
     "",
-    "I would like to place an exam order.",
+    "Please find my exam order summary below:",
     "",
     `Order Number: ${input.orderNumber}`,
-    `School: ${input.schoolName}`,
+    `School Name: ${input.schoolName}`,
     `Exam Session: ${input.sessionName}`,
-    `Total: ${formatKesPrice(input.totalAmount)}`,
-    "",
-    "Please find my order attached.",
+    `Total Papers: ${input.totalPapers}`,
+    `Total Amount: ${formatKesPrice(input.totalAmount)}`,
   ].join("\n");
 }
 

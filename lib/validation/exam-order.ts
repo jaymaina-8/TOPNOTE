@@ -46,6 +46,8 @@ function parseRequiredText(value: unknown, fieldName: string, maxLength: number)
   return text;
 }
 
+const PHONE_RE = /^[+\d\s().-]{7,25}$/;
+
 export function validateExamOrderInput(input: ExamOrderFormInput):
   | { ok: true; data: ValidatedExamOrderInput }
   | { ok: false; error: string } {
@@ -60,6 +62,10 @@ export function validateExamOrderInput(input: ExamOrderFormInput):
 
   const phone = parseRequiredText(input.phone, "Phone number", 40);
   if (typeof phone !== "string") return { ok: false, error: phone.error };
+
+  if (!PHONE_RE.test(phone)) {
+    return { ok: false, error: "Please enter a valid phone number (7 to 25 characters, e.g. +254700000000)." };
+  }
 
   const county = parseRequiredText(input.county, "County", 120);
   if (typeof county !== "string") return { ok: false, error: county.error };
@@ -80,6 +86,10 @@ export function validateExamOrderInput(input: ExamOrderFormInput):
     const quantity = parseQuantity(input.quantities[classKey]);
     if (quantity <= 0) continue;
 
+    if (quantity > 5000) {
+      return { ok: false, error: `Quantity for ${getExamClassLabel(classKey)} cannot exceed 5,000.` };
+    }
+
     const unitPrice = Number(input.prices[classKey] ?? 0);
     if (!Number.isFinite(unitPrice) || unitPrice < 0) {
       return { ok: false, error: `Invalid price for ${getExamClassLabel(classKey)}.` };
@@ -99,6 +109,14 @@ export function validateExamOrderInput(input: ExamOrderFormInput):
 
   if (items.length === 0) {
     return { ok: false, error: "Enter at least one exam quantity." };
+  }
+
+  if (totalPapers > 20000) {
+    return { ok: false, error: "Total number of papers in a single order cannot exceed 20,000." };
+  }
+
+  if (totalAmount > 2000000) {
+    return { ok: false, error: "Total order value cannot exceed KES 2,000,000." };
   }
 
   return {

@@ -409,6 +409,51 @@ export type Database = {
         };
         Relationships: [];
       };
+      security_events: {
+        Row: {
+          id: string;
+          event_type: string;
+          ip: string;
+          path: string | null;
+          details: Json | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          event_type: string;
+          ip: string;
+          path?: string | null;
+          details?: Json | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          event_type?: string;
+          ip?: string;
+          path?: string | null;
+          details?: Json | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      rate_limits: {
+        Row: {
+          key: string;
+          count: number;
+          reset_at: string;
+        };
+        Insert: {
+          key: string;
+          count?: number;
+          reset_at: string;
+        };
+        Update: {
+          key?: string;
+          count?: number;
+          reset_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -427,6 +472,10 @@ export type Database = {
       generate_exam_order_number: {
         Args: Record<string, never>;
         Returns: string;
+      };
+      check_rate_limit: {
+        Args: { p_key: string; p_limit: number; p_window_seconds: number };
+        Returns: { allowed: boolean; remaining: number; retry_after: number }[];
       };
     };
     Enums: Record<string, never>;
