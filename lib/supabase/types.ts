@@ -232,6 +232,36 @@ export type Database = {
           },
         ];
       };
+      notifications: {
+        Row: {
+          id: string;
+          title: string;
+          message: string;
+          type: string;
+          metadata: Json;
+          is_read: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          message: string;
+          type: string;
+          metadata?: Json;
+          is_read?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          message?: string;
+          type?: string;
+          metadata?: Json;
+          is_read?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       conversion_events: {
         Row: {
           id: string;

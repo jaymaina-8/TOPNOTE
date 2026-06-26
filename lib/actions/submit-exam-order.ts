@@ -132,6 +132,28 @@ export async function submitExamOrderAction(
   }
 
   const order = inserted as ExamOrderWithSession;
+
+  // Create notification record for the dashboard
+  const { error: notificationError } = await admin
+    .from("notifications")
+    .insert({
+      title: "New Exam Order",
+      message: `A new exam order (${orderNumber}) was submitted by ${validated.data.schoolName}.`,
+      type: "exam_order",
+      metadata: {
+        order_id: order.id,
+        order_number: orderNumber,
+        school_name: validated.data.schoolName,
+        total_amount: validated.data.totalAmount,
+        total_papers: validated.data.totalPapers,
+      },
+      is_read: false,
+    });
+
+  if (notificationError) {
+    console.error("[submitExamOrderAction] notification insert error", notificationError.message);
+  }
+
   const pdfBytes = await generateExamOrderPdf(order);
   const storagePath = getPdfStoragePath();
 

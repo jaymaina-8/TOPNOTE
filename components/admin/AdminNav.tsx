@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { signOutAction } from "@/lib/auth/sign-out";
 import { LOGO_SRC } from "@/lib/site";
 import { cn } from "@/lib/utils";
+import { NotificationBell } from "./NotificationBell";
 
 const links = [
   { href: "/dashboard", label: "Overview", short: "Home" },
@@ -59,6 +60,7 @@ export function AdminNav() {
         </nav>
 
         <div className="ml-auto flex flex-wrap items-center gap-3">
+          <NotificationBell />
           <Link
             href="/"
             className="text-sm font-semibold text-neutral-600 underline-offset-4 hover:text-neutral-950 hover:underline"
