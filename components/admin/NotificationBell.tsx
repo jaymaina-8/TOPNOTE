@@ -79,6 +79,7 @@ export function NotificationBell() {
 
     // Fetch initial notifications
     const fetchNotifications = async () => {
+      console.log("[NotificationBell] Initial fetch start");
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
@@ -86,11 +87,12 @@ export function NotificationBell() {
         .limit(20);
 
       if (error) {
-        console.error("Error fetching notifications:", error.message);
+        console.error("[NotificationBell] Initial fetch error:", error.message, error);
         return;
       }
 
       if (data) {
+        console.log("[NotificationBell] Initial fetch success, row count:", data.length, data);
         setNotifications(data);
         setUnreadCount(data.filter((n) => !n.is_read).length);
       }
@@ -99,12 +101,14 @@ export function NotificationBell() {
     fetchNotifications();
 
     // Subscribe to Realtime notifications channel
+    console.log("[NotificationBell] Realtime subscription starts. Channel: db-notifications");
     const channel = supabase
       .channel("db-notifications")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "notifications" },
         (payload) => {
+          console.log("[NotificationBell] Realtime payload received:", payload);
           if (payload.eventType === "INSERT") {
             const newNotif = payload.new as Notification;
             setNotifications((prev) => {
@@ -145,8 +149,14 @@ export function NotificationBell() {
             });
           }
         }
-      )
-      .subscribe();
+      );
+
+    channel.subscribe((status, err) => {
+      console.log(`[NotificationBell] Realtime subscription status updated: ${status}`);
+      if (err) {
+        console.error("[NotificationBell] Realtime subscription error:", err);
+      }
+    });
 
     return () => {
       supabase.removeChannel(channel);

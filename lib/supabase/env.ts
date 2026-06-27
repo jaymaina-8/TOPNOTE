@@ -23,10 +23,17 @@ export function getSupabaseEnv(options?: ParseSupabaseEnvOptions): {
 } {
   const allowServer = options?.allowServerOnlyAliases === true;
 
+  // Statically reference NEXT_PUBLIC_* variables so that the Next.js compiler
+  // can replace them with their literal values in client-side bundles.
+  const nextPublicUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const nextPublicAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
   const urlRaw =
+    (nextPublicUrl ? String(nextPublicUrl).trim() : undefined) ||
     readEnvTrimmed("NEXT_PUBLIC_SUPABASE_URL") ||
     (allowServer ? readEnvTrimmed("SUPABASE_URL") : undefined);
   const anonKeyRaw =
+    (nextPublicAnonKey ? String(nextPublicAnonKey).trim() : undefined) ||
     readEnvTrimmed("NEXT_PUBLIC_SUPABASE_ANON_KEY") ||
     (allowServer ? readEnvTrimmed("SUPABASE_ANON_KEY") : undefined);
 
