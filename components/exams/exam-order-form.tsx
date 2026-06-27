@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo } from "react";
+import { useActionState, useEffect, useMemo, useRef } from "react";
 import { submitExamOrderAction, type SubmitExamOrderState } from "@/lib/actions/submit-exam-order";
 import type { GeneratedExamOrder } from "@/lib/exams/draft-storage";
 import { EXAM_CLASSES } from "@/lib/exams/classes";
@@ -64,6 +64,16 @@ export function ExamOrderForm({
   onStartNewOrder,
 }: ExamOrderFormProps) {
   const [state, formAction, pending] = useActionState(submitExamOrderAction, initialState);
+  const successRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (state.status === "success" && successRef.current) {
+      successRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [state.status]);
 
   useEffect(() => {
     if (state.status !== "success") return;
@@ -124,112 +134,7 @@ export function ExamOrderForm({
         </div>
       ) : null}
 
-      {activeOrder ? (
-        <div className="mb-8 space-y-6">
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 sm:p-6">
-            <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-emerald-950">Thank You!</h3>
-                <div className="mt-2 space-y-2 text-sm leading-relaxed text-emerald-900">
-                  <p>Your exam order has been received successfully by TopNote Publishers.</p>
-                  <p>Your order has been recorded and is now awaiting payment confirmation.</p>
-                  <p>Please complete your payment using the details below.</p>
-                  <p>Once payment has been received, our team will begin processing your order and will contact you if any clarification is required.</p>
-                  <p>Thank you for choosing TopNote Publishers.</p>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-5 sm:p-6">
-            <p className="text-sm font-bold uppercase tracking-[0.14em] text-emerald-800">
-              {showingRecoveredOrder ? "Recent Order" : "Order Summary"}
-            </p>
-            <p className="mt-2 text-2xl font-black text-emerald-950">{activeOrder.orderNumber}</p>
-            <p className="mt-2 text-sm text-emerald-900">
-              {schoolName || "Your school"} · {activeOrder.sessionName}
-            </p>
-            <p className="mt-1 text-sm text-emerald-900">
-              {activeOrder.totalPapers} students · {formatKesPrice(activeOrder.totalAmount)}
-            </p>
-            <p className="mt-3 rounded-lg border border-emerald-200/60 bg-white/60 px-3 py-2 text-xs leading-relaxed text-emerald-900">
-              WhatsApp does not allow websites to attach files automatically. You can download the PDF below and attach it manually to your WhatsApp message.
-            </p>
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-              {activeOrder.pdfUrl ? (
-                <a
-                  href={activeOrder.pdfUrl}
-                  download
-                  className="inline-flex min-h-12 items-center justify-center rounded-xl bg-primary px-5 text-sm font-bold text-white transition hover:bg-primary/90"
-                >
-                  Download PDF
-                </a>
-              ) : null}
-              <a
-                href={activeOrder.whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#25D366] px-5 text-sm font-bold text-white transition hover:bg-[#1fb855]"
-              >
-                Send via WhatsApp
-              </a>
-              <button
-                type="button"
-                onClick={onStartNewOrder}
-                className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-300 bg-white px-5 text-sm font-bold text-emerald-900 transition hover:bg-emerald-100"
-              >
-                Start New Order
-              </button>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 sm:p-6">
-            <h3 className="text-lg font-bold text-blue-950 mb-3">Payment Details</h3>
-            <p className="text-sm text-blue-900 mb-5">
-              Please complete your payment using the details below.
-            </p>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between rounded-xl bg-white p-4 shadow-sm border border-blue-100">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-neutral-500">PAYBILL</p>
-                  <p className="mt-1 font-mono text-xl font-black text-neutral-900">247247</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => navigator.clipboard.writeText("247247")}
-                  className="flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-sm font-bold text-blue-700 transition hover:bg-blue-100"
-                >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  Copy
-                </button>
-              </div>
-              <div className="flex items-center justify-between rounded-xl bg-white p-4 shadow-sm border border-blue-100">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-neutral-500">ACCOUNT NUMBER</p>
-                  <p className="mt-1 font-mono text-xl font-black text-neutral-900">0712430992</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => navigator.clipboard.writeText("0712430992")}
-                  className="flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-sm font-bold text-blue-700 transition hover:bg-blue-100"
-                >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  Copy
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       {state.status === "error" ? (
         <div className="mb-8 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900" role="alert">
@@ -260,7 +165,7 @@ export function ExamOrderForm({
                 name="school_name"
                 required
                 className={cn(inputClass, "mt-1.5 focus:bg-white")}
-                disabled={pending}
+                disabled={pending || !!activeOrder}
                 placeholder="e.g. Greenwood Academy"
                 value={schoolName}
                 onChange={(event) => onSchoolNameChange(event.target.value)}
@@ -275,7 +180,7 @@ export function ExamOrderForm({
                 name="contact_person"
                 required
                 className={cn(inputClass, "mt-1.5 focus:bg-white")}
-                disabled={pending}
+                disabled={pending || !!activeOrder}
                 placeholder="e.g. Principal / Head Teacher"
                 value={contactPerson}
                 onChange={(event) => onContactPersonChange(event.target.value)}
@@ -291,7 +196,7 @@ export function ExamOrderForm({
                 type="tel"
                 required
                 className={cn(inputClass, "mt-1.5 focus:bg-white")}
-                disabled={pending}
+                disabled={pending || !!activeOrder}
                 placeholder="e.g. 0712345678"
                 value={phoneNumber}
                 onChange={(event) => onPhoneNumberChange(event.target.value)}
@@ -306,7 +211,7 @@ export function ExamOrderForm({
                 name="county"
                 required
                 className={cn(inputClass, "mt-1.5 focus:bg-white")}
-                disabled={pending}
+                disabled={pending || !!activeOrder}
                 placeholder="e.g. Nairobi"
                 value={county}
                 onChange={(event) => onCountyChange(event.target.value)}
@@ -321,7 +226,7 @@ export function ExamOrderForm({
                 name="delivery_location"
                 required
                 className={cn(inputClass, "mt-1.5 focus:bg-white")}
-                disabled={pending}
+                disabled={pending || !!activeOrder}
                 placeholder="e.g. Town, Street, or Landmark"
                 value={deliveryLocation}
                 onChange={(event) => onDeliveryLocationChange(event.target.value)}
@@ -342,7 +247,7 @@ export function ExamOrderForm({
               name="additional_notes"
               rows={3}
               className={cn(inputClass, "min-h-[90px] resize-y focus:bg-white")}
-              disabled={pending}
+              disabled={pending || !!activeOrder}
               placeholder="List any specific guidelines, packaging preferences, or requests here..."
               value={additionalNotes}
               onChange={(event) => onAdditionalNotesChange(event.target.value)}
@@ -383,7 +288,7 @@ export function ExamOrderForm({
                           value={quantities[key] || ""}
                           onChange={(event) => updateQuantity(key, event.target.value)}
                           className={cn(qtyInputClass, "w-full max-w-[120px] transition-all hover:border-neutral-300 focus:scale-[1.02]")}
-                          disabled={pending}
+                          disabled={pending || !!activeOrder}
                           placeholder="0"
                         />
                       </div>
@@ -396,7 +301,10 @@ export function ExamOrderForm({
         </div>
 
         {/* Sticky Totals Bar */}
-        <div className="sticky bottom-3 z-20 rounded-2xl border border-primary/20 bg-white/95 p-5 shadow-[0_12px_40px_rgba(15,23,42,0.15)] backdrop-blur-md sm:bottom-4 sm:p-6 transition-all">
+        <div className={cn(
+          "rounded-2xl border border-primary/20 bg-white/95 p-5 shadow-[0_12px_40px_rgba(15,23,42,0.15)] backdrop-blur-md sm:p-6 transition-all",
+          activeOrder ? "relative z-10" : "sticky bottom-3 z-20 sm:bottom-4"
+        )}>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-neutral-500">Order Totals</p>
@@ -406,15 +314,125 @@ export function ExamOrderForm({
               </div>
               <p className="mt-1 text-[11px] text-neutral-400">Estimated total updates instantly.</p>
             </div>
-            <button
-              type="submit"
-              disabled={pending || totals.totalPapers === 0}
-              className="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-neutral-950 px-8 text-sm font-bold text-white transition hover:bg-neutral-800 hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:scale-100 sm:w-auto shadow-md"
-            >
-              {pending ? "Generating order..." : "Generate order"}
-            </button>
+            {!activeOrder && (
+              <button
+                type="submit"
+                disabled={pending || totals.totalPapers === 0}
+                className="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-neutral-950 px-8 text-sm font-bold text-white transition hover:bg-neutral-800 hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:scale-100 sm:w-auto shadow-md"
+              >
+                {pending ? "Generating order..." : "Generate order"}
+              </button>
+            )}
           </div>
         </div>
+
+        {/* Success Section */}
+        {activeOrder ? (
+          <div ref={successRef} className="space-y-6 mt-6 scroll-mt-6">
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 sm:p-6">
+              <div className="flex items-start gap-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-emerald-950">Thank You!</h3>
+                  <div className="mt-2 space-y-2 text-sm leading-relaxed text-emerald-900">
+                    <p>Your exam order has been received successfully by TopNote Publishers.</p>
+                    <p>Your order has been recorded and is now awaiting payment confirmation.</p>
+                    <p>Please complete your payment using the details below.</p>
+                    <p>Once payment has been received, our team will begin processing your order and will contact you if any clarification is required.</p>
+                    <p>Thank you for choosing TopNote Publishers.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-5 sm:p-6">
+              <p className="text-sm font-bold uppercase tracking-[0.14em] text-emerald-800">
+                {showingRecoveredOrder ? "Recent Order" : "Order Summary"}
+              </p>
+              <p className="mt-2 text-2xl font-black text-emerald-950">{activeOrder.orderNumber}</p>
+              <p className="mt-2 text-sm text-emerald-900">
+                {schoolName || "Your school"} · {activeOrder.sessionName}
+              </p>
+              <p className="mt-1 text-sm text-emerald-900">
+                {activeOrder.totalPapers} students · {formatKesPrice(activeOrder.totalAmount)}
+              </p>
+              <p className="mt-3 rounded-lg border border-emerald-200/60 bg-white/60 px-3 py-2 text-xs leading-relaxed text-emerald-900">
+                WhatsApp does not allow websites to attach files automatically. You can download the PDF below and attach it manually to your WhatsApp message.
+              </p>
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                {activeOrder.pdfUrl ? (
+                  <a
+                    href={activeOrder.pdfUrl}
+                    download
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl bg-primary px-5 text-sm font-bold text-white transition hover:bg-primary/90"
+                  >
+                    Download PDF
+                  </a>
+                ) : null}
+                <a
+                  href={activeOrder.whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#25D366] px-5 text-sm font-bold text-white transition hover:bg-[#1fb855]"
+                >
+                  Send via WhatsApp
+                </a>
+                <button
+                  type="button"
+                  onClick={onStartNewOrder}
+                  className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-300 bg-white px-5 text-sm font-bold text-emerald-900 transition hover:bg-emerald-100"
+                >
+                  Start New Order
+                </button>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 sm:p-6">
+              <h3 className="text-lg font-bold text-blue-950 mb-3">Payment Details</h3>
+              <p className="text-sm text-blue-900 mb-5">
+                Please complete your payment using the details below.
+              </p>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between rounded-xl bg-white p-4 shadow-sm border border-blue-100">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-neutral-500">PAYBILL</p>
+                    <p className="mt-1 font-mono text-xl font-black text-neutral-900">247247</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigator.clipboard.writeText("247247")}
+                    className="flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-sm font-bold text-blue-700 transition hover:bg-blue-100"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    Copy
+                  </button>
+                </div>
+                <div className="flex items-center justify-between rounded-xl bg-white p-4 shadow-sm border border-blue-100">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-neutral-500">ACCOUNT NUMBER</p>
+                    <p className="mt-1 font-mono text-xl font-black text-neutral-900">0712430992</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigator.clipboard.writeText("0712430992")}
+                    className="flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-sm font-bold text-blue-700 transition hover:bg-blue-100"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    Copy
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </form>
     </section>
   );
