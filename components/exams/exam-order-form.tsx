@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { submitExamOrderAction, type SubmitExamOrderState } from "@/lib/actions/submit-exam-order";
 import type { GeneratedExamOrder } from "@/lib/exams/draft-storage";
 import { EXAM_CLASSES } from "@/lib/exams/classes";
@@ -65,15 +65,103 @@ export function ExamOrderForm({
 }: ExamOrderFormProps) {
   const [state, formAction, pending] = useActionState(submitExamOrderAction, initialState);
   const successRef = useRef<HTMLDivElement>(null);
+  const generateButtonRef = useRef<HTMLButtonElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
+  const [shouldRenderModal, setShouldRenderModal] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Trigger modal open and scroll background to bottom success section on success
   useEffect(() => {
-    if (state.status === "success" && successRef.current) {
-      successRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
+    if (state.status === "success") {
+      setShouldRenderModal(true);
+      const frame = requestAnimationFrame(() => {
+        setIsModalOpen(true);
       });
+
+      if (successRef.current) {
+        successRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+
+      return () => cancelAnimationFrame(frame);
     }
   }, [state.status]);
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setTimeout(() => {
+      setShouldRenderModal(false);
+      generateButtonRef.current?.focus();
+    }, 250);
+  };
+
+  const handleStartNewOrderFromModal = () => {
+    setIsModalOpen(false);
+    setShouldRenderModal(false);
+    onStartNewOrder();
+  };
+
+  // Close modal on ESC key press
+  useEffect(() => {
+    if (!isModalOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleCloseModal();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isModalOpen]);
+
+  // Trap keyboard focus inside modal when open
+  useEffect(() => {
+    if (!isModalOpen || !modalRef.current) return;
+
+    const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+    );
+    
+    if (focusableElements.length === 0) return;
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    firstElement.focus();
+
+    const handleTabKey = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          lastElement.focus();
+          e.preventDefault();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          firstElement.focus();
+          e.preventDefault();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleTabKey);
+    return () => window.removeEventListener("keydown", handleTabKey);
+  }, [isModalOpen]);
+
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (shouldRenderModal) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [shouldRenderModal]);
 
   useEffect(() => {
     if (state.status !== "success") return;
@@ -314,50 +402,39 @@ export function ExamOrderForm({
               </div>
               <p className="mt-1 text-[11px] text-neutral-400">Estimated total updates instantly.</p>
             </div>
-            {!activeOrder && (
-              <button
-                type="submit"
-                disabled={pending || totals.totalPapers === 0}
-                className="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-neutral-950 px-8 text-sm font-bold text-white transition hover:bg-neutral-800 hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:scale-100 sm:w-auto shadow-md"
-              >
-                {pending ? "Generating order..." : "Generate order"}
-              </button>
-            )}
+            <button
+              ref={generateButtonRef}
+              type="submit"
+              disabled={pending || totals.totalPapers === 0 || !!activeOrder}
+              className="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-neutral-950 px-8 text-sm font-bold text-white transition hover:bg-neutral-800 hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:scale-100 sm:w-auto shadow-md"
+            >
+              {pending ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4}></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Generating Order...
+                </span>
+              ) : (
+                "Generate Order"
+              )}
+            </button>
           </div>
         </div>
 
-        {/* Success Section */}
+        {/* Success Section (In-page Order Summary & Payment) */}
         {activeOrder ? (
           <div ref={successRef} className="space-y-6 mt-6 scroll-mt-6">
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 sm:p-6">
-              <div className="flex items-start gap-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-emerald-950">Thank You!</h3>
-                  <div className="mt-2 space-y-2 text-sm leading-relaxed text-emerald-900">
-                    <p>Your exam order has been received successfully by TopNote Publishers.</p>
-                    <p>Your order has been recorded and is now awaiting payment confirmation.</p>
-                    <p>Please complete your payment using the details below.</p>
-                    <p>Once payment has been received, our team will begin processing your order and will contact you if any clarification is required.</p>
-                    <p>Thank you for choosing TopNote Publishers.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-5 sm:p-6">
               <p className="text-sm font-bold uppercase tracking-[0.14em] text-emerald-800">
                 {showingRecoveredOrder ? "Recent Order" : "Order Summary"}
               </p>
               <p className="mt-2 text-2xl font-black text-emerald-950">{activeOrder.orderNumber}</p>
-              <p className="mt-2 text-sm text-emerald-900">
+              <p className="mt-2 text-sm text-emerald-950">
                 {schoolName || "Your school"} · {activeOrder.sessionName}
               </p>
-              <p className="mt-1 text-sm text-emerald-900">
+              <p className="mt-1 text-sm text-emerald-950">
                 {activeOrder.totalPapers} students · {formatKesPrice(activeOrder.totalAmount)}
               </p>
               <p className="mt-3 rounded-lg border border-emerald-200/60 bg-white/60 px-3 py-2 text-xs leading-relaxed text-emerald-900">
@@ -434,6 +511,137 @@ export function ExamOrderForm({
           </div>
         ) : null}
       </form>
+
+      {/* Success Modal Popup */}
+      {shouldRenderModal && activeOrder && (
+        <div
+          className={cn(
+            "fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-950/60 backdrop-blur-sm transition-opacity duration-300 ease-out",
+            isModalOpen ? "opacity-100" : "opacity-0"
+          )}
+        >
+          <div
+            ref={modalRef}
+            className={cn(
+              "relative w-full max-w-lg overflow-y-auto max-h-[90vh] rounded-3xl bg-white p-6 shadow-2xl transition-all duration-300 ease-out border border-neutral-100 flex flex-col items-center text-center",
+              isModalOpen ? "scale-100 opacity-100" : "scale-95 opacity-0"
+            )}
+          >
+            {/* Green Success Icon */}
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 mb-4 animate-bounce">
+              <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+
+            {/* Title & Subtitle */}
+            <h3 className="text-xl font-black text-neutral-900 leading-tight">Order Received Successfully</h3>
+            <p className="mt-1 text-sm font-semibold text-primary">Thank you for choosing TopNote Publishers.</p>
+
+            {/* Body */}
+            <div className="mt-4 text-sm leading-relaxed text-neutral-600 space-y-2 max-w-sm">
+              <p>Your examination order has been successfully received and recorded.</p>
+              <p>Your order is now awaiting payment confirmation.</p>
+              <p>Once payment has been confirmed, our team will begin processing your order and contact you if any clarification is required.</p>
+            </div>
+
+            {/* Order Summary */}
+            <div className="w-full mt-5 bg-neutral-50 rounded-2xl p-4 border border-neutral-200/60 text-left text-sm text-neutral-800 space-y-2">
+              <div className="flex justify-between items-center border-b border-neutral-200 pb-2">
+                <span className="font-bold text-neutral-500 uppercase tracking-wider text-[10px]">Order Number</span>
+                <span className="font-black text-neutral-900 tracking-mono">{activeOrder.orderNumber}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-neutral-500">School Name</span>
+                <span className="font-semibold text-neutral-900 text-right">{schoolName || "Your school"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-neutral-500">Exam Session</span>
+                <span className="font-semibold text-neutral-900 text-right">{activeOrder.sessionName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-neutral-500">Total Students</span>
+                <span className="font-semibold text-neutral-900">{activeOrder.totalPapers}</span>
+              </div>
+              <div className="flex justify-between border-t border-neutral-200 pt-2 font-bold text-base">
+                <span className="text-neutral-950">Total Amount</span>
+                <span className="text-primary font-black">{formatKesPrice(activeOrder.totalAmount)}</span>
+              </div>
+            </div>
+
+            {/* Payment Section */}
+            <div className="w-full mt-4 bg-blue-50/50 rounded-2xl p-4 border border-blue-100 text-left text-sm space-y-3">
+              <div className="flex items-center justify-between rounded-xl bg-white p-3 shadow-sm border border-blue-50">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">PAYBILL</p>
+                  <p className="font-mono text-base font-black text-neutral-800">247247</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigator.clipboard.writeText("247247")}
+                  className="flex items-center gap-1 rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700 transition hover:bg-blue-100"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Copy
+                </button>
+              </div>
+              <div className="flex items-center justify-between rounded-xl bg-white p-3 shadow-sm border border-blue-50">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">ACCOUNT NUMBER</p>
+                  <p className="font-mono text-base font-black text-neutral-800">0712430992</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigator.clipboard.writeText("0712430992")}
+                  className="flex items-center gap-1 rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700 transition hover:bg-blue-100"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Copy
+                </button>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="w-full mt-5 flex flex-col gap-2">
+              {activeOrder.pdfUrl ? (
+                <a
+                  href={activeOrder.pdfUrl}
+                  download
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-5 text-sm font-bold text-white transition hover:bg-primary/90 w-full"
+                >
+                  Download PDF
+                </a>
+              ) : null}
+              <a
+                href={activeOrder.whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#25D366] px-5 text-sm font-bold text-white transition hover:bg-[#1fb855] w-full"
+              >
+                Send via WhatsApp
+              </a>
+              <button
+                type="button"
+                onClick={handleStartNewOrderFromModal}
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-neutral-300 bg-white px-5 text-sm font-bold text-neutral-800 transition hover:bg-neutral-50 w-full"
+              >
+                Start New Order
+              </button>
+              <button
+                type="button"
+                onClick={handleCloseModal}
+                className="inline-flex min-h-11 items-center justify-center rounded-xl text-sm font-bold text-neutral-500 transition hover:bg-neutral-50 w-full"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
