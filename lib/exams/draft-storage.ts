@@ -15,6 +15,7 @@ export type GeneratedExamOrder = {
   totalPapers: number;
   totalAmount: number;
   downloadToken: string;
+  whatsappUrl?: string;
 };
 
 const DRAFT_KEY = "topnote:exam-order:draft";

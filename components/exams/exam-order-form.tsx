@@ -174,6 +174,7 @@ export function ExamOrderForm({
       totalPapers: state.totalPapers,
       totalAmount: state.totalAmount,
       downloadToken: state.downloadToken,
+      whatsappUrl: state.whatsappUrl,
     }, state.whatsappUrl);
   }, [state, onGeneratedOrder]);
 
@@ -190,9 +191,11 @@ export function ExamOrderForm({
       };
     }
     if (generatedOrder) {
+      const downloadToken = generatedOrder.downloadToken || (generatedOrder as any).download_token;
       return {
         ...generatedOrder,
-        whatsappUrl: whatsappUrl ?? "",
+        downloadToken,
+        whatsappUrl: whatsappUrl || generatedOrder.whatsappUrl || "",
       };
     }
     return null;

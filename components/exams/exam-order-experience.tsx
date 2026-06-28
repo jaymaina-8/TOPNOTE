@@ -65,8 +65,12 @@ export function ExamOrderExperience({ session }: ExamOrderExperienceProps) {
 
       const loadedOrder = loadGeneratedOrder();
       setGeneratedOrder(loadedOrder);
-      if (loadedOrder?.downloadToken) {
-        getExamOrderByTokenAction(loadedOrder.downloadToken).then((res) => {
+      if (loadedOrder?.whatsappUrl) {
+        setWhatsappUrl(loadedOrder.whatsappUrl);
+      }
+      const token = loadedOrder?.downloadToken || (loadedOrder as any)?.download_token;
+      if (token) {
+        getExamOrderByTokenAction(token).then((res) => {
           if (res?.whatsappUrl) {
             setWhatsappUrl(res.whatsappUrl);
           }
