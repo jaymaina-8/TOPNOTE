@@ -35,8 +35,9 @@ type ExamOrderFormProps = {
   updateQuantity: (classKey: string, value: string) => void;
   totals: { totalPapers: number; totalAmount: number };
   generatedOrder: GeneratedExamOrder | null;
+  whatsappUrl: string | null;
   draftRestored: boolean;
-  onGeneratedOrder: (order: GeneratedExamOrder) => void;
+  onGeneratedOrder: (order: GeneratedExamOrder, whatsappUrl?: string) => void;
   onStartNewOrder: () => void;
 };
 
@@ -59,6 +60,7 @@ export function ExamOrderForm({
   updateQuantity,
   totals,
   generatedOrder,
+  whatsappUrl,
   draftRestored,
   onGeneratedOrder,
   onStartNewOrder,
@@ -166,32 +168,35 @@ export function ExamOrderForm({
   useEffect(() => {
     if (state.status !== "success") return;
     onGeneratedOrder({
-      orderId: state.orderId,
       orderNumber: state.orderNumber,
+      schoolName: state.schoolName,
       sessionName: state.sessionName,
       totalPapers: state.totalPapers,
       totalAmount: state.totalAmount,
-      pdfUrl: state.pdfUrl,
-      whatsappUrl: state.whatsappUrl,
-      timestamp: Date.now(),
-    });
+      downloadToken: state.downloadToken,
+    }, state.whatsappUrl);
   }, [state, onGeneratedOrder]);
 
-  const activeOrder = useMemo<GeneratedExamOrder | null>(() => {
+  const activeOrder = useMemo(() => {
     if (state.status === "success") {
       return {
-        orderId: state.orderId,
         orderNumber: state.orderNumber,
+        schoolName: state.schoolName,
         sessionName: state.sessionName,
         totalPapers: state.totalPapers,
         totalAmount: state.totalAmount,
-        pdfUrl: state.pdfUrl,
+        downloadToken: state.downloadToken,
         whatsappUrl: state.whatsappUrl,
-        timestamp: generatedOrder?.orderId === state.orderId ? generatedOrder.timestamp : 0,
       };
     }
-    return generatedOrder;
-  }, [generatedOrder, state]);
+    if (generatedOrder) {
+      return {
+        ...generatedOrder,
+        whatsappUrl: whatsappUrl ?? "",
+      };
+    }
+    return null;
+  }, [generatedOrder, state, whatsappUrl]);
 
   const showingRecoveredOrder = state.status !== "success" && Boolean(generatedOrder);
 
@@ -432,7 +437,7 @@ export function ExamOrderForm({
               </p>
               <p className="mt-2 text-2xl font-black text-emerald-950">{activeOrder.orderNumber}</p>
               <p className="mt-2 text-sm text-emerald-950">
-                {schoolName || "Your school"} · {activeOrder.sessionName}
+                {activeOrder.schoolName || schoolName || "Your school"} · {activeOrder.sessionName}
               </p>
               <p className="mt-1 text-sm text-emerald-950">
                 {activeOrder.totalPapers} students · {formatKesPrice(activeOrder.totalAmount)}
@@ -441,23 +446,26 @@ export function ExamOrderForm({
                 WhatsApp does not allow websites to attach files automatically. You can download the PDF below and attach it manually to your WhatsApp message.
               </p>
               <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-                {activeOrder.pdfUrl ? (
+                {activeOrder.downloadToken ? (
                   <a
-                    href={activeOrder.pdfUrl}
-                    download
+                    href={`/api/orders/download?token=${activeOrder.downloadToken}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="inline-flex min-h-12 items-center justify-center rounded-xl bg-primary px-5 text-sm font-bold text-white transition hover:bg-primary/90"
                   >
                     Download PDF
                   </a>
                 ) : null}
-                <a
-                  href={activeOrder.whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#25D366] px-5 text-sm font-bold text-white transition hover:bg-[#1fb855]"
-                >
-                  Send via WhatsApp
-                </a>
+                {activeOrder.whatsappUrl ? (
+                  <a
+                    href={activeOrder.whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#25D366] px-5 text-sm font-bold text-white transition hover:bg-[#1fb855]"
+                  >
+                    Send via WhatsApp
+                  </a>
+                ) : null}
                 <button
                   type="button"
                   onClick={onStartNewOrder}
@@ -607,23 +615,26 @@ export function ExamOrderForm({
 
             {/* Action Buttons */}
             <div className="w-full mt-5 flex flex-col gap-2">
-              {activeOrder.pdfUrl ? (
+              {activeOrder.downloadToken ? (
                 <a
-                  href={activeOrder.pdfUrl}
-                  download
+                  href={`/api/orders/download?token=${activeOrder.downloadToken}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-5 text-sm font-bold text-white transition hover:bg-primary/90 w-full"
                 >
                   Download PDF
                 </a>
               ) : null}
-              <a
-                href={activeOrder.whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#25D366] px-5 text-sm font-bold text-white transition hover:bg-[#1fb855] w-full"
-              >
-                Send via WhatsApp
-              </a>
+              {activeOrder.whatsappUrl ? (
+                <a
+                  href={activeOrder.whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#25D366] px-5 text-sm font-bold text-white transition hover:bg-[#1fb855] w-full"
+                >
+                  Send via WhatsApp
+                </a>
+              ) : null}
               <button
                 type="button"
                 onClick={handleStartNewOrderFromModal}

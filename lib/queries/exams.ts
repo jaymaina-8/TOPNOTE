@@ -136,7 +136,7 @@ export async function getExamOrders(): Promise<ExamOrdersResult> {
     return { ok: false, reason: "query_failed" };
   }
 
-  return { ok: true, orders: (data ?? []) as ExamOrderWithSession[] };
+  return { ok: true, orders: (data ?? []) as unknown as ExamOrderWithSession[] };
 }
 
 export async function getExamOrderByIdAdmin(id: string): Promise<ExamOrderWithSession | null> {
@@ -150,5 +150,5 @@ export async function getExamOrderByIdAdmin(id: string): Promise<ExamOrderWithSe
     .maybeSingle();
 
   if (error || !data) return null;
-  return data as ExamOrderWithSession;
+  return data as unknown as ExamOrderWithSession;
 }

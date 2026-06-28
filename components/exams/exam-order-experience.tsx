@@ -12,6 +12,7 @@ import {
   saveGeneratedOrder,
   type GeneratedExamOrder,
 } from "@/lib/exams/draft-storage";
+import { getExamOrderByTokenAction } from "@/lib/actions/submit-exam-order";
 import { ExamPricingTable } from "./exam-pricing-table";
 import { ExamOrderForm } from "./exam-order-form";
 
@@ -29,6 +30,7 @@ export function ExamOrderExperience({ session }: ExamOrderExperienceProps) {
   const [additionalNotes, setAdditionalNotes] = useState("");
   const [draftRestored, setDraftRestored] = useState(false);
   const [generatedOrder, setGeneratedOrder] = useState<GeneratedExamOrder | null>(null);
+  const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null);
   const [didHydrate, setDidHydrate] = useState(false);
   const [quantities, setQuantities] = useState<Record<string, number>>(() =>
     EXAM_CLASSES.reduce(
@@ -61,7 +63,15 @@ export function ExamOrderExperience({ session }: ExamOrderExperienceProps) {
         setDraftRestored(true);
       }
 
-      setGeneratedOrder(loadGeneratedOrder());
+      const loadedOrder = loadGeneratedOrder();
+      setGeneratedOrder(loadedOrder);
+      if (loadedOrder?.downloadToken) {
+        getExamOrderByTokenAction(loadedOrder.downloadToken).then((res) => {
+          if (res?.whatsappUrl) {
+            setWhatsappUrl(res.whatsappUrl);
+          }
+        });
+      }
       setDidHydrate(true);
     }, 0);
 
@@ -120,15 +130,19 @@ export function ExamOrderExperience({ session }: ExamOrderExperienceProps) {
     }));
   };
 
-  const handleGeneratedOrder = useCallback((order: GeneratedExamOrder) => {
+  const handleGeneratedOrder = useCallback((order: GeneratedExamOrder, nextWhatsappUrl?: string) => {
     setGeneratedOrder(order);
     saveGeneratedOrder(order);
+    if (nextWhatsappUrl) {
+      setWhatsappUrl(nextWhatsappUrl);
+    }
   }, []);
 
   const handleStartNewOrder = useCallback(() => {
     clearDraft();
     clearGeneratedOrder();
     setGeneratedOrder(null);
+    setWhatsappUrl(null);
     setDraftRestored(false);
     setSchoolName("");
     setContactPerson("");
@@ -182,6 +196,7 @@ export function ExamOrderExperience({ session }: ExamOrderExperienceProps) {
         updateQuantity={updateQuantity}
         totals={totals}
         generatedOrder={generatedOrder}
+        whatsappUrl={whatsappUrl}
         draftRestored={draftRestored}
         onGeneratedOrder={handleGeneratedOrder}
         onStartNewOrder={handleStartNewOrder}

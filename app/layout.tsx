@@ -24,6 +24,54 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                const removeAttr = (node) => {
+                  if (node.nodeType === 1) {
+                    if (node.hasAttribute('bis_skin_checked')) {
+                      node.removeAttribute('bis_skin_checked');
+                    }
+                    const children = node.getElementsByTagName('*');
+                    for (let i = 0; i < children.length; i++) {
+                      if (children[i].hasAttribute('bis_skin_checked')) {
+                        children[i].removeAttribute('bis_skin_checked');
+                      }
+                    }
+                  }
+                };
+                const observer = new MutationObserver((mutations) => {
+                  for (let i = 0; i < mutations.length; i++) {
+                    const m = mutations[i];
+                    if (m.type === 'childList') {
+                      const addedNodes = m.addedNodes;
+                      for (let j = 0; j < addedNodes.length; j++) {
+                        removeAttr(addedNodes[j]);
+                      }
+                    } else if (m.type === 'attributes' && m.attributeName === 'bis_skin_checked') {
+                      const target = m.target;
+                      if (target.nodeType === 1 && target.hasAttribute('bis_skin_checked')) {
+                        target.removeAttribute('bis_skin_checked');
+                      }
+                    }
+                  }
+                });
+                observer.observe(document.documentElement, {
+                  childList: true,
+                  subtree: true,
+                  attributes: true,
+                  attributeFilter: ['bis_skin_checked']
+                });
+                window.addEventListener('DOMContentLoaded', () => {
+                  document.querySelectorAll('[bis_skin_checked]').forEach(el => el.removeAttribute('bis_skin_checked'));
+                });
+              })();
+            `
+          }}
+        />
+      </head>
       <body className="flex min-h-full flex-col bg-background text-foreground" suppressHydrationWarning>
         {children}
       </body>

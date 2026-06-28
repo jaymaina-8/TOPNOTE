@@ -17,6 +17,7 @@ const navLinks = [
   { href: "/products", label: "Products", eyebrow: "Books and stationery" },
   { href: "/for-parents", label: "Parents", eyebrow: "Home lists" },
   { href: "/for-schools", label: "Schools", eyebrow: "Bulk supplies" },
+  { href: "/orders", label: "Orders", eyebrow: "Track your order" },
   { href: "/contact", label: "Contact", eyebrow: "Talk to us" },
 ] as const;
 

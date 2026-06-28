@@ -375,6 +375,8 @@ export type Database = {
           total_amount: number;
           status: ExamOrderStatus;
           pdf_storage_path: string | null;
+          download_token: string;
+          download_token_created_at: string;
           created_at: string;
           updated_at: string;
         };
@@ -393,6 +395,8 @@ export type Database = {
           total_amount?: number;
           status?: ExamOrderStatus;
           pdf_storage_path?: string | null;
+          download_token?: string;
+          download_token_created_at?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -411,6 +415,8 @@ export type Database = {
           total_amount?: number;
           status?: ExamOrderStatus;
           pdf_storage_path?: string | null;
+          download_token?: string;
+          download_token_created_at?: string;
           created_at?: string;
           updated_at?: string;
         };

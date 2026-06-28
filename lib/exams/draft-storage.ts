@@ -9,14 +9,12 @@ export type ExamOrderDraft = {
 };
 
 export type GeneratedExamOrder = {
-  orderId: string;
   orderNumber: string;
+  schoolName: string;
   sessionName: string;
   totalPapers: number;
   totalAmount: number;
-  pdfUrl: string | null;
-  whatsappUrl: string;
-  timestamp: number;
+  downloadToken: string;
 };
 
 const DRAFT_KEY = "topnote:exam-order:draft";

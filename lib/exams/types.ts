@@ -55,6 +55,7 @@ export type ExamOrderRow = {
   total_amount: number;
   status: ExamOrderStatus;
   pdf_storage_path: string | null;
+  download_token: string;
   created_at: string;
   updated_at: string;
 };
