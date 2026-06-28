@@ -62,3 +62,8 @@ export function clearGeneratedOrder(): void {
   if (!isBrowser()) return;
   window.localStorage.removeItem(GENERATED_ORDER_KEY);
 }
+
+export function downloadExamPdf(downloadToken: string): void {
+  if (typeof window === "undefined") return;
+  window.open(`/api/orders/download?token=${downloadToken}`, "_blank");
+}

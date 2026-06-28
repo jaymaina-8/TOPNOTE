@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { submitExamOrderAction, type SubmitExamOrderState } from "@/lib/actions/submit-exam-order";
-import type { GeneratedExamOrder } from "@/lib/exams/draft-storage";
+import { downloadExamPdf, type GeneratedExamOrder } from "@/lib/exams/draft-storage";
 import { EXAM_CLASSES } from "@/lib/exams/classes";
 import { formatKesPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -447,14 +447,13 @@ export function ExamOrderForm({
               </p>
               <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                 {activeOrder.downloadToken ? (
-                  <a
-                    href={`/api/orders/download?token=${activeOrder.downloadToken}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    type="button"
+                    onClick={() => downloadExamPdf(activeOrder.downloadToken)}
                     className="inline-flex min-h-12 items-center justify-center rounded-xl bg-primary px-5 text-sm font-bold text-white transition hover:bg-primary/90"
                   >
                     Download PDF
-                  </a>
+                  </button>
                 ) : null}
                 {activeOrder.whatsappUrl ? (
                   <a
@@ -616,14 +615,13 @@ export function ExamOrderForm({
             {/* Action Buttons */}
             <div className="w-full mt-5 flex flex-col gap-2">
               {activeOrder.downloadToken ? (
-                <a
-                  href={`/api/orders/download?token=${activeOrder.downloadToken}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={() => downloadExamPdf(activeOrder.downloadToken)}
                   className="inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-5 text-sm font-bold text-white transition hover:bg-primary/90 w-full"
                 >
                   Download PDF
-                </a>
+                </button>
               ) : null}
               {activeOrder.whatsappUrl ? (
                 <a

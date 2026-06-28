@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { lookupOrderAction, type LookupOrderState } from "@/lib/actions/submit-exam-order";
+import { downloadExamPdf } from "@/lib/exams/draft-storage";
 import { Container } from "@/components/ui/Container";
 import { PageIntro } from "@/components/ui/PageIntro";
 import { Section } from "@/components/ui/Section";
@@ -164,14 +165,12 @@ export default function OrderLookupPage() {
 
                 {/* Actions */}
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row border-t border-neutral-100 pt-6">
-                  <a
-                    href={`/api/orders/download?token=${state.downloadToken}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex min-h-12 items-center justify-center rounded-xl bg-primary px-6 text-sm font-bold text-white transition hover:bg-primary/90 flex-1"
+                  <Button
+                    onClick={() => downloadExamPdf(state.downloadToken)}
+                    className="min-h-12 flex-1"
                   >
                     Download PDF
-                  </a>
+                  </Button>
                   <a
                     href={state.whatsappUrl}
                     target="_blank"
