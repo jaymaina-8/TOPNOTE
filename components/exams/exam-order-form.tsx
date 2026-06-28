@@ -37,6 +37,7 @@ type ExamOrderFormProps = {
   generatedOrder: GeneratedExamOrder | null;
   whatsappUrl: string | null;
   draftRestored: boolean;
+  sessionActive: boolean;
   onGeneratedOrder: (order: GeneratedExamOrder, whatsappUrl?: string) => void;
   onStartNewOrder: () => void;
 };
@@ -62,6 +63,7 @@ export function ExamOrderForm({
   generatedOrder,
   whatsappUrl,
   draftRestored,
+  sessionActive,
   onGeneratedOrder,
   onStartNewOrder,
 }: ExamOrderFormProps) {
@@ -76,8 +78,8 @@ export function ExamOrderForm({
   // Trigger modal open and scroll background to bottom success section on success
   useEffect(() => {
     if (state.status === "success") {
-      setShouldRenderModal(true);
       const frame = requestAnimationFrame(() => {
+        setShouldRenderModal(true);
         setIsModalOpen(true);
       });
 
@@ -191,7 +193,7 @@ export function ExamOrderForm({
       };
     }
     if (generatedOrder) {
-      const downloadToken = generatedOrder.downloadToken || (generatedOrder as any).download_token;
+      const downloadToken = generatedOrder.downloadToken || (generatedOrder as unknown as { download_token?: string }).download_token || "";
       return {
         ...generatedOrder,
         downloadToken,
@@ -445,11 +447,57 @@ export function ExamOrderForm({
               <p className="mt-1 text-sm text-emerald-950">
                 {activeOrder.totalPapers} students · {formatKesPrice(activeOrder.totalAmount)}
               </p>
-              <p className="mt-3 rounded-lg border border-emerald-200/60 bg-white/60 px-3 py-2 text-xs leading-relaxed text-emerald-900">
-                WhatsApp does not allow websites to attach files automatically. You can download the PDF below and attach it manually to your WhatsApp message.
-              </p>
+              {sessionActive ? (
+                <p className="mt-3 rounded-lg border border-emerald-200/60 bg-white/60 px-3 py-2 text-xs leading-relaxed text-emerald-900">
+                  WhatsApp does not allow websites to attach files automatically. You can download the PDF below and attach it manually to your WhatsApp message.
+                </p>
+              ) : (
+                <div className="mt-5 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/60 to-indigo-50/40 p-5 text-left shadow-[var(--shadow-sm)]">
+                  <h4 className="text-sm font-black text-blue-950 flex items-center gap-2">
+                    <svg className="h-5 w-5 text-blue-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Need this order again?
+                  </h4>
+                  <p className="mt-2 text-xs leading-relaxed text-blue-900/80 font-medium">
+                    Your quick order session has ended.
+                  </p>
+                  
+                  <div className="mt-4 text-xs text-blue-950/80 space-y-3">
+                    <div>
+                      <p className="font-bold text-blue-950">To:</p>
+                      <ul className="mt-1 list-disc pl-5 text-xs text-blue-900/85 space-y-1 font-medium">
+                        <li>Download your PDF</li>
+                        <li>Check your order status</li>
+                        <li>Reopen your WhatsApp order message</li>
+                      </ul>
+                    </div>
+                    
+                    <p className="font-medium text-blue-900/90">
+                      please use the <a href="/orders" className="font-black text-blue-700 hover:text-blue-800 hover:underline">Order Lookup</a> page.
+                    </p>
+                    
+                    <div>
+                      <p className="font-bold text-blue-950">You will need:</p>
+                      <ul className="mt-1 list-disc pl-5 text-xs text-blue-900/85 space-y-1 font-medium">
+                        <li>Order Number</li>
+                        <li>Phone Number</li>
+                      </ul>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-5">
+                    <a
+                      href="/orders"
+                      className="inline-flex min-h-10 items-center justify-center rounded-xl bg-blue-600 px-5 text-xs font-bold text-white shadow-[0_2px_4px_rgba(37,99,235,0.2)] transition hover:bg-blue-700 hover:scale-[1.01] active:scale-[0.99]"
+                    >
+                      Go to Order Lookup
+                    </a>
+                  </div>
+                </div>
+              )}
               <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-                {activeOrder.downloadToken ? (
+                {sessionActive && activeOrder.downloadToken ? (
                   <button
                     type="button"
                     onClick={() => downloadExamPdf(activeOrder.downloadToken)}
@@ -458,7 +506,7 @@ export function ExamOrderForm({
                     Download PDF
                   </button>
                 ) : null}
-                {activeOrder.whatsappUrl ? (
+                {sessionActive && activeOrder.whatsappUrl ? (
                   <a
                     href={activeOrder.whatsappUrl}
                     target="_blank"

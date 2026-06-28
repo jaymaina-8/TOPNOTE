@@ -31,6 +31,7 @@ export function ExamOrderExperience({ session }: ExamOrderExperienceProps) {
   const [draftRestored, setDraftRestored] = useState(false);
   const [generatedOrder, setGeneratedOrder] = useState<GeneratedExamOrder | null>(null);
   const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null);
+  const [sessionActive, setSessionActive] = useState(false);
   const [didHydrate, setDidHydrate] = useState(false);
   const [quantities, setQuantities] = useState<Record<string, number>>(() =>
     EXAM_CLASSES.reduce(
@@ -65,10 +66,14 @@ export function ExamOrderExperience({ session }: ExamOrderExperienceProps) {
 
       const loadedOrder = loadGeneratedOrder();
       setGeneratedOrder(loadedOrder);
+      
+      const hasActiveSession = typeof window !== "undefined" && !!window.sessionStorage.getItem("activeOrderSession");
+      setSessionActive(hasActiveSession);
+
       if (loadedOrder?.whatsappUrl) {
         setWhatsappUrl(loadedOrder.whatsappUrl);
       }
-      const token = loadedOrder?.downloadToken || (loadedOrder as any)?.download_token;
+      const token = loadedOrder?.downloadToken || (loadedOrder as unknown as { download_token?: string })?.download_token;
       if (token) {
         getExamOrderByTokenAction(token).then((res) => {
           if (res?.whatsappUrl) {
@@ -137,6 +142,10 @@ export function ExamOrderExperience({ session }: ExamOrderExperienceProps) {
   const handleGeneratedOrder = useCallback((order: GeneratedExamOrder, nextWhatsappUrl?: string) => {
     setGeneratedOrder(order);
     saveGeneratedOrder(order);
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem("activeOrderSession", "true");
+    }
+    setSessionActive(true);
     if (nextWhatsappUrl) {
       setWhatsappUrl(nextWhatsappUrl);
     }
@@ -145,6 +154,10 @@ export function ExamOrderExperience({ session }: ExamOrderExperienceProps) {
   const handleStartNewOrder = useCallback(() => {
     clearDraft();
     clearGeneratedOrder();
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem("activeOrderSession");
+    }
+    setSessionActive(false);
     setGeneratedOrder(null);
     setWhatsappUrl(null);
     setDraftRestored(false);
@@ -202,6 +215,7 @@ export function ExamOrderExperience({ session }: ExamOrderExperienceProps) {
         generatedOrder={generatedOrder}
         whatsappUrl={whatsappUrl}
         draftRestored={draftRestored}
+        sessionActive={sessionActive}
         onGeneratedOrder={handleGeneratedOrder}
         onStartNewOrder={handleStartNewOrder}
       />
