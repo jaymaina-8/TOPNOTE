@@ -74,6 +74,30 @@ export function ExamOrderForm({
 
   const [shouldRenderModal, setShouldRenderModal] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [copiedOrderNumber, setCopiedOrderNumber] = useState(false);
+
+  const handleCopyOrderNumber = async (orderNumber: string) => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(orderNumber);
+      } else {
+        // Fallback for unsupported browsers
+        const textArea = document.createElement("textarea");
+        textArea.value = orderNumber;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+      }
+      setCopiedOrderNumber(true);
+      setTimeout(() => setCopiedOrderNumber(false), 3000);
+    } catch (err) {
+      console.error("Failed to copy order number:", err);
+    }
+  };
 
   // Trigger modal open and scroll background to bottom success section on success
   useEffect(() => {
@@ -226,7 +250,7 @@ export function ExamOrderForm({
         </div>
       </div>
 
-      {draftRestored ? (
+      {draftRestored && !activeOrder ? (
         <div className="mb-6 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900" role="status">
           Draft restored successfully.
         </div>
@@ -407,8 +431,12 @@ export function ExamOrderForm({
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-neutral-500">Order Totals</p>
               <div className="mt-1.5 flex items-baseline gap-2">
-                <span className="text-3xl font-black tracking-tight text-primary">{formatKesPrice(totals.totalAmount)}</span>
-                <span className="text-sm font-semibold text-neutral-500">({totals.totalPapers} Students)</span>
+                <span className="text-3xl font-black tracking-tight text-primary">
+                  {formatKesPrice(activeOrder ? activeOrder.totalAmount : totals.totalAmount)}
+                </span>
+                <span className="text-sm font-semibold text-neutral-500">
+                  ({activeOrder ? activeOrder.totalPapers : totals.totalPapers} Students)
+                </span>
               </div>
               <p className="mt-1 text-[11px] text-neutral-400">Estimated total updates instantly.</p>
             </div>
@@ -440,7 +468,32 @@ export function ExamOrderForm({
               <p className="text-sm font-bold uppercase tracking-[0.14em] text-emerald-800">
                 {showingRecoveredOrder ? "Recent Order" : "Order Summary"}
               </p>
-              <p className="mt-2 text-2xl font-black text-emerald-950">{activeOrder.orderNumber}</p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-2">
+                <div>
+                  <p className="text-2xl font-black text-emerald-950 tracking-mono">{activeOrder.orderNumber}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleCopyOrderNumber(activeOrder.orderNumber)}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-900 transition hover:bg-emerald-200 self-start sm:self-center shadow-sm"
+                >
+                  {copiedOrderNumber ? (
+                    <>
+                      <svg className="h-3.5 w-3.5 text-emerald-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      ✓ Order number copied successfully.
+                    </>
+                  ) : (
+                    <>
+                      <svg className="h-3.5 w-3.5 text-emerald-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      Copy Order Number
+                    </>
+                  )}
+                </button>
+              </div>
               <p className="mt-2 text-sm text-emerald-950">
                 {activeOrder.schoolName || schoolName || "Your school"} · {activeOrder.sessionName}
               </p>
@@ -603,11 +656,62 @@ export function ExamOrderForm({
               <p>Once payment has been confirmed, our team will begin processing your order and contact you if any clarification is required.</p>
             </div>
 
+            {/* Highlighted section prompting user to save order number */}
+            <div className="w-full mt-5 bg-gradient-to-br from-indigo-50 to-blue-50/50 rounded-2xl p-5 border-l-4 border-primary text-left text-sm space-y-3">
+              <p className="font-bold text-indigo-950 text-base">Please save your Order Number.</p>
+              <p className="text-xs text-indigo-900/80 font-medium">You&apos;ll need it later to:</p>
+              <ul className="list-disc pl-5 text-xs text-indigo-900/80 space-y-1 font-medium">
+                <li>Download your PDF</li>
+                <li>Check your order status</li>
+                <li>Contact TopNote Publishers</li>
+              </ul>
+              
+              <div className="pt-3 border-t border-indigo-100 mt-2 flex flex-col gap-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-500">Order Number</span>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 rounded-xl border border-indigo-100 shadow-sm">
+                  <span className="font-mono text-lg font-black text-indigo-950 tracking-mono">{activeOrder.orderNumber}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleCopyOrderNumber(activeOrder.orderNumber)}
+                    className="inline-flex min-h-10 items-center justify-center rounded-xl bg-primary px-4 text-xs font-bold text-white shadow-sm transition hover:bg-primary/90"
+                  >
+                    {copiedOrderNumber ? (
+                      <span className="flex items-center gap-1">
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Copied!
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1">
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Copy Order Number
+                      </span>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {/* Order Summary */}
             <div className="w-full mt-5 bg-neutral-50 rounded-2xl p-4 border border-neutral-200/60 text-left text-sm text-neutral-800 space-y-2">
               <div className="flex justify-between items-center border-b border-neutral-200 pb-2">
                 <span className="font-bold text-neutral-500 uppercase tracking-wider text-[10px]">Order Number</span>
-                <span className="font-black text-neutral-900 tracking-mono">{activeOrder.orderNumber}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-black text-neutral-900 tracking-mono">{activeOrder.orderNumber}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleCopyOrderNumber(activeOrder.orderNumber)}
+                    className="text-neutral-500 hover:text-neutral-700 transition"
+                    title="Copy Order Number"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                </div>
               </div>
               <div className="flex justify-between">
                 <span className="text-neutral-500">School Name</span>

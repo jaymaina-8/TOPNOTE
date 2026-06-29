@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { lookupOrderAction, type LookupOrderState } from "@/lib/actions/submit-exam-order";
 import { downloadExamPdf } from "@/lib/exams/draft-storage";
 import { Container } from "@/components/ui/Container";
@@ -43,6 +43,30 @@ function getStatusLabel(status: string) {
 
 export default function OrderLookupPage() {
   const [state, formAction, pending] = useActionState(lookupOrderAction, initialState);
+  const [copiedOrderNumber, setCopiedOrderNumber] = useState(false);
+
+  const handleCopyOrderNumber = async (orderNumber: string) => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(orderNumber);
+      } else {
+        // Fallback for unsupported browsers
+        const textArea = document.createElement("textarea");
+        textArea.value = orderNumber;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+      }
+      setCopiedOrderNumber(true);
+      setTimeout(() => setCopiedOrderNumber(false), 3000);
+    } catch (err) {
+      console.error("Failed to copy order number:", err);
+    }
+  };
 
   return (
     <>
@@ -125,9 +149,32 @@ export default function OrderLookupPage() {
               {/* Order Status Card */}
               <div className="overflow-hidden rounded-3xl border border-neutral-200 bg-white p-6 shadow-[var(--shadow-sm)] sm:p-8">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-neutral-100 pb-5 mb-5">
-                  <div>
-                    <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">Order Found</span>
-                    <h2 className="text-2xl font-black text-neutral-950 tracking-tight mt-1">{state.orderNumber}</h2>
+                  <div className="flex flex-col sm:flex-row sm:items-baseline gap-3">
+                    <div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">Order Found</span>
+                      <h2 className="text-2xl font-black text-neutral-950 tracking-tight mt-1">{state.orderNumber}</h2>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyOrderNumber(state.orderNumber)}
+                      className="inline-flex items-center gap-1 rounded-lg bg-neutral-100 px-2.5 py-1 text-xs font-bold text-neutral-700 transition hover:bg-neutral-200"
+                    >
+                      {copiedOrderNumber ? (
+                        <>
+                          <svg className="h-3 w-3 text-neutral-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                          ✓ Order number copied successfully.
+                        </>
+                      ) : (
+                        <>
+                          <svg className="h-3 w-3 text-neutral-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          Copy Order Number
+                        </>
+                      )}
+                    </button>
                   </div>
                   <span className={cn("inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-bold tracking-wide uppercase self-start sm:self-center", getStatusStyles(state.statusLabel))}>
                     {getStatusLabel(state.statusLabel)}
