@@ -240,7 +240,9 @@ export type Database = {
           type: string;
           metadata: Json;
           is_read: boolean;
+          read_at: string | null;
           created_at: string;
+          updated_at: string;
         };
         Insert: {
           id?: string;
@@ -249,7 +251,9 @@ export type Database = {
           type: string;
           metadata?: Json;
           is_read?: boolean;
+          read_at?: string | null;
           created_at?: string;
+          updated_at?: string;
         };
         Update: {
           id?: string;
@@ -258,7 +262,9 @@ export type Database = {
           type?: string;
           metadata?: Json;
           is_read?: boolean;
+          read_at?: string | null;
           created_at?: string;
+          updated_at?: string;
         };
         Relationships: [];
       };

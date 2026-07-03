@@ -18,6 +18,7 @@ const links = [
   { href: "/dashboard/testimonials", label: "Testimonials", short: "Quotes" },
   { href: "/dashboard/inquiries", label: "Inquiries", short: "Inquiries" },
   { href: "/dashboard/analytics", label: "Analytics", short: "Analytics" },
+  { href: "/dashboard/notifications", label: "Notifications", short: "Alerts" },
 ] as const;
 
 export function AdminNav() {
