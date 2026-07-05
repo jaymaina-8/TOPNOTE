@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { EXAM_CLASSES, buildPriceMap } from "@/lib/exams/classes";
 import type { ExamSessionWithPrices } from "@/lib/exams/types";
 import {
@@ -34,6 +34,13 @@ export function ExamOrderExperience({ session }: ExamOrderExperienceProps) {
   const [sessionActive, setSessionActive] = useState(false);
   const [didHydrate, setDidHydrate] = useState(false);
   const [formKey, setFormKey] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Scroll back to the top of the form section after a reset
+  useEffect(() => {
+    if (formKey === 0) return;
+    containerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [formKey]);
   const [quantities, setQuantities] = useState<Record<string, number>>(() =>
     EXAM_CLASSES.reduce(
       (acc, item) => {
@@ -188,7 +195,7 @@ export function ExamOrderExperience({ session }: ExamOrderExperienceProps) {
   }, []);
 
   return (
-    <div className="space-y-10 md:space-y-12">
+    <div ref={containerRef} className="space-y-10 md:space-y-12">
       {/* Current Exam Session Section with Pricing Table */}
       <section className="overflow-hidden rounded-3xl border border-primary/10 bg-white shadow-[var(--shadow-sm)]">
         <div className="border-b border-primary/10 bg-gradient-to-br from-primary/8 via-white to-white px-5 py-8 sm:px-8">
