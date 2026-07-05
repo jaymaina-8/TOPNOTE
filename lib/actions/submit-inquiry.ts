@@ -1,11 +1,9 @@
 "use server";
 
-import { headers } from "next/headers";
-
 import { createInquiry } from "@/lib/queries/inquiries";
 import { validateInquiryInput } from "@/lib/validation/inquiry";
-import { consumeRateLimit } from "@/lib/security/rate-limiter";
-import { RATE_LIMIT_POLICIES } from "@/lib/security/config";
+import { consumeRateLimit, getRateLimitContext, getFriendlyRateLimitMessage } from "@/lib/security/rate-limiter";
+import { RATE_LIMITS } from "@/lib/rate-limit/config";
 import { trackBlocked } from "@/lib/security/monitoring";
 
 export type InquiryActionState =
@@ -20,16 +18,20 @@ export async function submitInquiryAction(
   _prev: InquiryActionState,
   formData: FormData,
 ): Promise<InquiryActionState> {
-  const reqHeaders = await headers();
-  const rawIp = reqHeaders.get("x-forwarded-for")?.split(",")[0] ||
-                reqHeaders.get("x-real-ip") ||
-                "127.0.0.1";
-  const ip = rawIp.trim();
+  const ctx = await getRateLimitContext();
+  const sourceType = formData.get("source_type")?.toString();
+  const policy = sourceType === "contact" ? RATE_LIMITS.contact : RATE_LIMITS.inquiry;
+  const reason = sourceType === "contact" ? "contact_rate_limit_exceeded" : "inquiry_rate_limit_exceeded";
+  const path = sourceType === "contact" ? "/contact" : "/submit-inquiry";
 
-  const rateLimitResult = await consumeRateLimit(ip, RATE_LIMIT_POLICIES.inquirySubmit);
+  const rateLimitResult = await consumeRateLimit(ctx, policy);
   if (!rateLimitResult.allowed) {
-    await trackBlocked(ip, "/submit-inquiry", "inquiry_rate_limit_exceeded");
-    return { status: "error", error: `Too many requests. Please try again in ${rateLimitResult.retryAfter} seconds.` };
+    await trackBlocked(ctx.ip, path, reason, {
+      sessionId: ctx.sessionId,
+      userAgent: ctx.userAgent,
+      remainingWaitTime: rateLimitResult.retryAfter,
+    });
+    return { status: "error", error: getFriendlyRateLimitMessage(rateLimitResult.retryAfter) };
   }
 
   const validated = validateInquiryInput({

@@ -2,53 +2,119 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { updateSession } from "@/lib/supabase/middleware";
 import { consumeRateLimit } from "@/lib/security/rate-limiter";
-import { RATE_LIMIT_POLICIES, type RateLimitPolicy } from "@/lib/security/config";
+import { RATE_LIMITS, type RateLimitPolicy } from "@/lib/rate-limit/config";
+import { trackBlocked } from "@/lib/security/monitoring";
 
-/**
- * Root Middleware:
- * 1. Global rate limiting for pages and API routes
- * 2. Supabase Auth: refresh session cookies and light route gating for `/login` and `/dashboard/*`.
- */
 export async function proxy(request: NextRequest) {
-  // 1. Rate Limiting
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "127.0.0.1";
   const url = request.nextUrl.clone();
   const pathname = url.pathname;
 
-  // Determine policy based on route
-  let policy: RateLimitPolicy = RATE_LIMIT_POLICIES.globalPageLoad;
-  if (pathname.startsWith("/search")) {
-    policy = RATE_LIMIT_POLICIES.search;
-  } else if (pathname.startsWith("/dashboard/api") || pathname.startsWith("/api/dashboard")) {
-    policy = RATE_LIMIT_POLICIES.dashboardApi;
-  }
-
-  // Exempt static assets and Next.js internal paths from strict rate limits
+  // Exempt static assets and Next.js internal paths
   if (
     pathname.startsWith("/_next") ||
     pathname.match(/\.(jpeg|jpg|png|gif|svg|ico|css|js)$/)
   ) {
-    // skip rate limiting for assets
-  } else {
-    try {
-      const rateLimitResult = await consumeRateLimit(ip, policy);
-      if (!rateLimitResult.allowed) {
-        return new NextResponse("Too Many Requests. Please try again later.", {
-          status: 429,
-          headers: {
-            "Retry-After": rateLimitResult.retryAfter.toString(),
-            "X-RateLimit-Limit": policy.limit.toString(),
-            "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
-          },
-        });
-      }
-    } catch (error) {
-      console.warn("[Middleware Rate Limiter Error]", error);
-    }
+    return NextResponse.next({ request });
   }
 
-  // 2. Auth Session & Gating (from proxy.ts)
-  const { response, user } = await updateSession(request);
+  // 1. Session and Browser Fingerprint Cookie Management
+  let response = NextResponse.next({ request });
+  let cookiesUpdated = false;
+
+  let sessionId = request.cookies.get("session_id")?.value;
+  if (!sessionId) {
+    sessionId = crypto.randomUUID();
+    request.cookies.set("session_id", sessionId);
+    cookiesUpdated = true;
+  }
+
+  let visitorId = request.cookies.get("visitor_id")?.value;
+  if (!visitorId) {
+    visitorId = crypto.randomUUID();
+    request.cookies.set("visitor_id", visitorId);
+    cookiesUpdated = true;
+  }
+
+  if (cookiesUpdated) {
+    response = NextResponse.next({
+      request: {
+        headers: new Headers(request.headers),
+      },
+    });
+    // Set cookies on response to send back to client
+    response.cookies.set("session_id", sessionId, {
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax",
+    });
+    response.cookies.set("visitor_id", visitorId, {
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 365, // 1 year
+    });
+  }
+
+  // 2. Rate Limiting
+  let policy: RateLimitPolicy = RATE_LIMITS.public;
+  if (pathname.startsWith("/search")) {
+    policy = RATE_LIMITS.search;
+  } else if (pathname.startsWith("/dashboard/api") || pathname.startsWith("/api/dashboard")) {
+    policy = RATE_LIMITS.dashboard;
+  }
+
+  try {
+    const ctx = {
+      ip: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+          request.headers.get("x-real-ip")?.trim() ||
+          "127.0.0.1",
+      sessionId,
+      userAgent: request.headers.get("user-agent") || undefined,
+      fingerprint: visitorId,
+    };
+
+    const rateLimitResult = await consumeRateLimit(ctx, policy);
+    if (!rateLimitResult.allowed) {
+      await trackBlocked(ctx.ip, pathname, "rate_limit_exceeded", {
+        sessionId: ctx.sessionId,
+        userAgent: ctx.userAgent,
+        remainingWaitTime: rateLimitResult.retryAfter,
+      });
+
+      // Friendly rate limit message formatting
+      const waitMessage = getFriendlyRateLimitMessage(rateLimitResult.retryAfter);
+      return new NextResponse(waitMessage, {
+        status: 429,
+        headers: {
+          "Retry-After": rateLimitResult.retryAfter.toString(),
+          "X-RateLimit-Limit": policy.limit.toString(),
+          "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
+        },
+      });
+    }
+  } catch (error) {
+    console.warn("[Middleware Rate Limiter Error]", error);
+  }
+
+  // 3. Auth Session & Gating (delegated to Supabase middleware helper)
+  const { response: authResponse, user } = await updateSession(request);
+
+  // Merge the cookies generated above onto the auth response
+  if (sessionId) {
+    authResponse.cookies.set("session_id", sessionId, {
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax",
+    });
+  }
+  if (visitorId) {
+    authResponse.cookies.set("visitor_id", visitorId, {
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 365,
+    });
+  }
 
   if (pathname === "/login" || pathname.startsWith("/login/")) {
     if (user) {
@@ -56,7 +122,7 @@ export async function proxy(request: NextRequest) {
       url.search = "";
       return NextResponse.redirect(url);
     }
-    return response;
+    return authResponse;
   }
 
   if (pathname === "/dashboard" || pathname.startsWith("/dashboard/")) {
@@ -65,20 +131,29 @@ export async function proxy(request: NextRequest) {
       url.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
       return NextResponse.redirect(url);
     }
-    return response;
+    return authResponse;
   }
 
-  return response;
+  return authResponse;
+}
+
+export function getFriendlyRateLimitMessage(retryAfter: number): string {
+  if (retryAfter < 60) {
+    const sec = Math.max(1, retryAfter);
+    return `You're submitting requests very quickly. Please wait about ${sec} seconds before trying again.`;
+  }
+  const minutes = Math.ceil(retryAfter / 60);
+  if (minutes < 60) {
+    return `Too many requests. Please try again in approximately ${minutes} ${minutes === 1 ? "minute" : "minutes"}.`;
+  }
+  const hours = Math.ceil(minutes / 60);
+  return `Too many requests. Please try again in approximately ${hours} ${hours === 1 ? "hour" : "hours"}.`;
 }
 
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
+     * Match all request paths except static files and icons
      */
     "/((?!_next/static|_next/image|favicon.ico).*)",
   ],

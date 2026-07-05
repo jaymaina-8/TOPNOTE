@@ -33,6 +33,7 @@ export function ExamOrderExperience({ session }: ExamOrderExperienceProps) {
   const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null);
   const [sessionActive, setSessionActive] = useState(false);
   const [didHydrate, setDidHydrate] = useState(false);
+  const [formKey, setFormKey] = useState(0);
   const [quantities, setQuantities] = useState<Record<string, number>>(() =>
     EXAM_CLASSES.reduce(
       (acc, item) => {
@@ -152,11 +153,14 @@ export function ExamOrderExperience({ session }: ExamOrderExperienceProps) {
   }, []);
 
   const handleStartNewOrder = useCallback(() => {
+    // Clear persisted storage first so hydration cannot restore the old order
     clearDraft();
     clearGeneratedOrder();
     if (typeof window !== "undefined") {
       window.sessionStorage.removeItem("activeOrderSession");
     }
+
+    // Reset all parent-controlled state
     setSessionActive(false);
     setGeneratedOrder(null);
     setWhatsappUrl(null);
@@ -176,6 +180,11 @@ export function ExamOrderExperience({ session }: ExamOrderExperienceProps) {
         {} as Record<string, number>,
       ),
     );
+
+    // Increment formKey to remount <ExamOrderForm>, resetting useActionState
+    // back to initialState. This is the only way to reset useActionState
+    // externally — React resets all component state when the key changes.
+    setFormKey((k) => k + 1);
   }, []);
 
   return (
@@ -195,6 +204,7 @@ export function ExamOrderExperience({ session }: ExamOrderExperienceProps) {
 
       {/* Styled order form */}
       <ExamOrderForm
+        key={formKey}
         session={session}
         priceMap={priceMap}
         schoolName={schoolName}

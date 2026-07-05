@@ -385,6 +385,11 @@ export type Database = {
           download_token_created_at: string;
           created_at: string;
           updated_at: string;
+          pdf_generation_failed: boolean;
+          pdf_generation_error: string | null;
+          pdf_generation_attempts: number;
+          last_pdf_attempt_at: string | null;
+          pdf_generated_at: string | null;
         };
         Insert: {
           id?: string;
@@ -405,6 +410,11 @@ export type Database = {
           download_token_created_at?: string;
           created_at?: string;
           updated_at?: string;
+          pdf_generation_failed?: boolean;
+          pdf_generation_error?: string | null;
+          pdf_generation_attempts?: number;
+          last_pdf_attempt_at?: string | null;
+          pdf_generated_at?: string | null;
         };
         Update: {
           id?: string;
@@ -425,6 +435,11 @@ export type Database = {
           download_token_created_at?: string;
           created_at?: string;
           updated_at?: string;
+          pdf_generation_failed?: boolean;
+          pdf_generation_error?: string | null;
+          pdf_generation_attempts?: number;
+          last_pdf_attempt_at?: string | null;
+          pdf_generated_at?: string | null;
         };
         Relationships: [
           {
@@ -483,16 +498,22 @@ export type Database = {
           key: string;
           count: number;
           reset_at: string;
+          tokens: number | null;
+          last_refilled_at: string | null;
         };
         Insert: {
           key: string;
           count?: number;
           reset_at: string;
+          tokens?: number | null;
+          last_refilled_at?: string | null;
         };
         Update: {
           key?: string;
           count?: number;
           reset_at?: string;
+          tokens?: number | null;
+          last_refilled_at?: string | null;
         };
         Relationships: [];
       };

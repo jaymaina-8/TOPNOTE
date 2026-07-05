@@ -58,6 +58,11 @@ export type ExamOrderRow = {
   download_token: string;
   created_at: string;
   updated_at: string;
+  pdf_generation_failed: boolean;
+  pdf_generation_error: string | null;
+  pdf_generation_attempts: number;
+  last_pdf_attempt_at: string | null;
+  pdf_generated_at: string | null;
 };
 
 export type ExamOrderWithSession = ExamOrderRow & {

@@ -52,6 +52,20 @@ function statusBadgeClass(status: ExamOrderStatus): string {
   }
 }
 
+function pdfStatusBadgeClass(failed: boolean, path: string | null, attempts: number): string {
+  if (path) return "border-emerald-200 bg-emerald-50 text-emerald-950";
+  if (failed) return "border-red-200 bg-red-50 text-red-950";
+  if (attempts > 0) return "border-amber-200 bg-amber-50 text-amber-950 animate-pulse";
+  return "border-sky-200 bg-sky-50 text-sky-950";
+}
+
+function getPdfStatusLabel(failed: boolean, path: string | null, attempts: number): string {
+  if (path) return "Ready";
+  if (failed) return "Failed";
+  if (attempts > 0) return "Generating";
+  return "Pending";
+}
+
 export default async function DashboardOrdersPage({ searchParams }: PageProps) {
   const sp = await searchParams;
   const result = await getExamOrders();
@@ -95,6 +109,7 @@ export default async function DashboardOrdersPage({ searchParams }: PageProps) {
                 <th className="px-4 py-3">Session</th>
                 <th className="px-4 py-3">Total</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">PDF Status</th>
                 <th className="px-4 py-3">Date</th>
                 <th className="px-4 py-3">Actions</th>
               </tr>
@@ -120,6 +135,21 @@ export default async function DashboardOrdersPage({ searchParams }: PageProps) {
                       className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-bold ${statusBadgeClass(order.status)}`}
                     >
                       {order.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4 align-top">
+                    <span
+                      className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-bold ${pdfStatusBadgeClass(
+                        order.pdf_generation_failed || false,
+                        order.pdf_storage_path,
+                        order.pdf_generation_attempts || 0
+                      )}`}
+                    >
+                      {getPdfStatusLabel(
+                        order.pdf_generation_failed || false,
+                        order.pdf_storage_path,
+                        order.pdf_generation_attempts || 0
+                      )}
                     </span>
                   </td>
                   <td className="px-4 py-4 align-top text-xs text-neutral-500">{formatOrderDate(order.created_at)}</td>

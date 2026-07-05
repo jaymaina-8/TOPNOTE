@@ -1,26 +1,24 @@
-import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { isAllowedRedirectTarget } from "@/lib/conversion/validate-redirect";
 import { trackPhoneClick, trackWhatsAppClick } from "@/lib/conversion/track";
-import { consumeRateLimit } from "@/lib/security/rate-limiter";
-import { RATE_LIMIT_POLICIES } from "@/lib/security/config";
+import { consumeRateLimit, getRateLimitContext, getFriendlyRateLimitMessage } from "@/lib/security/rate-limiter";
+import { RATE_LIMITS } from "@/lib/rate-limit/config";
 import { trackBlocked } from "@/lib/security/monitoring";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export async function GET(request: Request) {
-  const reqHeaders = await headers();
-  const rawIp = reqHeaders.get("x-forwarded-for")?.split(",")[0] ||
-                reqHeaders.get("x-real-ip") ||
-                "127.0.0.1";
-  const ip = rawIp.trim();
-
-  const rateLimitResult = await consumeRateLimit(ip, RATE_LIMIT_POLICIES.analyticsTrack);
+  const ctx = await getRateLimitContext();
+  const rateLimitResult = await consumeRateLimit(ctx, RATE_LIMITS.analytics);
   if (!rateLimitResult.allowed) {
-    await trackBlocked(ip, "/api/track-and-redirect", "analytics_rate_limit_exceeded");
-    return NextResponse.json({ error: "Too many requests." }, { status: 429 });
+    await trackBlocked(ctx.ip, "/api/track-and-redirect", "analytics_rate_limit_exceeded", {
+      sessionId: ctx.sessionId,
+      userAgent: ctx.userAgent,
+      remainingWaitTime: rateLimitResult.retryAfter,
+    });
+    return NextResponse.json({ error: getFriendlyRateLimitMessage(rateLimitResult.retryAfter) }, { status: 429 });
   }
 
   const { searchParams } = new URL(request.url);

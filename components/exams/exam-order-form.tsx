@@ -571,7 +571,7 @@ export function ExamOrderForm({
                 ) : null}
                 <button
                   type="button"
-                  onClick={onStartNewOrder}
+                  onClick={handleStartNewOrderFromModal}
                   className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-300 bg-white px-5 text-sm font-bold text-emerald-900 transition hover:bg-emerald-100"
                 >
                   Start New Order
