@@ -176,12 +176,25 @@ export async function GET(request: Request) {
 
   if (examOrder.pdf_storage_path) {
     const exists = await checkFileExists(admin, examOrder.pdf_storage_path);
-    if (!exists) {
-      return renderFriendlyError(genericErrorMsg);
+    if (exists) {
+      storagePath = examOrder.pdf_storage_path;
     }
-    storagePath = examOrder.pdf_storage_path;
-  } else {
-    // Generate and upload PDF on-the-fly for old orders that lack a path
+  }
+
+  if (!storagePath) {
+    if (examOrder.pdf_generation_failed) {
+      return renderFriendlyError("We encountered an issue preparing your PDF. Please contact support or try again later.");
+    }
+    // With synchronous PDF generation, the PDF should already exist for almost
+    // all orders by the time the customer clicks Download. The 30 s window only
+    // protects against the instant race condition (order just created, Inngest
+    // recovery worker hasn't retried yet).
+    const ageSeconds = (Date.now() - new Date(examOrder.created_at).getTime()) / 1000;
+    if (ageSeconds < 30) {
+      return renderFriendlyError("Your PDF is being prepared. Please try again in a few moments.");
+    }
+
+    // Fallback: Generate and upload PDF on-the-fly for older orders that missed background queue
     storagePath = await ensurePdfStoragePath(admin, examOrder);
     if (!storagePath) {
       return renderFriendlyError(genericErrorMsg);

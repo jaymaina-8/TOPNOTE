@@ -1,12 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 
+import { inngest } from "@/lib/inngest/client";
 import { generateExamOrderPdf } from "@/lib/exams/pdf";
 import { createExamOrderWhatsAppLink } from "@/lib/exams/whatsapp";
-import type { ExamOrderWithSession } from "@/lib/exams/types";
-import { getPdfStoragePath, uploadExamPdf, createExamPdfSignedUrl } from "@/lib/storage/pdf";
+import type { ExamOrderItem, ExamOrderWithSession } from "@/lib/exams/types";
+import { getPdfStoragePath, uploadExamPdf } from "@/lib/storage/pdf";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -14,8 +14,8 @@ import {
   parseExamOrderQuantitiesFromFormData,
   validateExamOrderInput,
 } from "@/lib/validation/exam-order";
-import { consumeRateLimit } from "@/lib/security/rate-limiter";
-import { RATE_LIMIT_POLICIES, ABUSE_SETTINGS } from "@/lib/security/config";
+import { consumeRateLimit, getRateLimitContext, getFriendlyRateLimitMessage } from "@/lib/security/rate-limiter";
+import { RATE_LIMITS, ABUSE_SETTINGS } from "@/lib/rate-limit/config";
 import { trackBlocked } from "@/lib/security/monitoring";
 
 export type SubmitExamOrderState =
@@ -31,22 +31,23 @@ export type SubmitExamOrderState =
       schoolName: string;
       totalAmount: number;
       totalPapers: number;
+      pdfStoragePath: string | null;
+      pdfGenerationFailed: boolean;
     };
 
 export async function submitExamOrderAction(
   _prev: SubmitExamOrderState,
   formData: FormData,
 ): Promise<SubmitExamOrderState> {
-  const reqHeaders = await headers();
-  const rawIp = reqHeaders.get("x-forwarded-for")?.split(",")[0] ||
-                reqHeaders.get("x-real-ip") ||
-                "127.0.0.1";
-  const ip = rawIp.trim();
-
-  const rateLimitResult = await consumeRateLimit(ip, RATE_LIMIT_POLICIES.examOrderSubmit);
+  const ctx = await getRateLimitContext();
+  const rateLimitResult = await consumeRateLimit(ctx, RATE_LIMITS.exams);
   if (!rateLimitResult.allowed) {
-    await trackBlocked(ip, "/submit-exam-order", "exam_order_rate_limit_exceeded");
-    return { status: "error", error: `You are submitting orders too quickly. Please try again in ${rateLimitResult.retryAfter} seconds.` };
+    await trackBlocked(ctx.ip, "/submit-exam-order", "exam_order_rate_limit_exceeded", {
+      sessionId: ctx.sessionId,
+      userAgent: ctx.userAgent,
+      remainingWaitTime: rateLimitResult.retryAfter,
+    });
+    return { status: "error", error: getFriendlyRateLimitMessage(rateLimitResult.retryAfter) };
   }
 
   const validated = validateExamOrderInput({
@@ -89,15 +90,28 @@ export async function submitExamOrderAction(
   const duplicateTimeThreshold = new Date(Date.now() - ABUSE_SETTINGS.duplicateOrderWindowSeconds * 1000).toISOString();
   const { data: duplicates } = await admin
     .from("exam_orders")
-    .select("id")
+    .select("id, phone, items")
     .eq("session_id", validated.data.sessionId)
     .eq("school_name", validated.data.schoolName)
-    .gte("created_at", duplicateTimeThreshold)
-    .limit(1);
+    .gte("created_at", duplicateTimeThreshold);
 
+  let isDuplicate = false;
   if (duplicates && duplicates.length > 0) {
-    await trackBlocked(ip, "/submit-exam-order", "duplicate_order_blocked", { school: validated.data.schoolName });
-    return { status: "error", error: "An order for this school was recently submitted. Please wait a few minutes." };
+    for (const dup of duplicates) {
+      if (dup.phone === validated.data.phone && compareOrderItems(dup.items, validated.data.items)) {
+        isDuplicate = true;
+        break;
+      }
+    }
+  }
+
+  if (isDuplicate) {
+    await trackBlocked(ctx.ip, "/submit-exam-order", "duplicate_order_blocked", {
+      school: validated.data.schoolName,
+      sessionId: ctx.sessionId,
+      userAgent: ctx.userAgent,
+    });
+    return { status: "error", error: "A duplicate order for this school was recently submitted. Please wait a few minutes." };
   }
 
   const { data: orderNumberData, error: orderNumberError } = await admin.rpc("generate_exam_order_number");
@@ -133,35 +147,91 @@ export async function submitExamOrderAction(
 
   const order = inserted as unknown as ExamOrderWithSession;
 
-  // Create notification record for the dashboard
-  const { error: notificationError } = await admin
-    .from("notifications")
-    .insert({
-      title: "New Exam Order",
-      message: `A new exam order (${orderNumber}) was submitted by ${validated.data.schoolName}.`,
-      type: "exam_order",
-      metadata: {
-        order_id: order.id,
-        order_number: orderNumber,
-        school_name: validated.data.schoolName,
-        total_amount: validated.data.totalAmount,
-        total_papers: validated.data.totalPapers,
-      },
-      is_read: false,
-    });
+  // ─── Synchronous PDF Generation ──────────────────────────────────────────
+  // Attempt to generate and upload the PDF immediately so the customer can
+  // download it as soon as the order confirmation screen appears.
+  // If this succeeds we do NOT emit an Inngest event — there is nothing left
+  // for the background worker to do.
+  // If it fails we record the error, emit the Inngest event for durable retry,
+  // and still return a success response so the customer always gets their order
+  // number regardless of PDF status.
 
-  if (notificationError) {
-    console.error("[submitExamOrderAction] notification insert error", notificationError.message);
-  }
+  let pdfStoragePath: string | null = null;
+  let pdfGenerationFailed = false;
 
-  const pdfBytes = await generateExamOrderPdf(order);
-  const storagePath = getPdfStoragePath();
+  try {
+    const pdfBytes = await generateExamOrderPdf(order);
+    const storagePath = getPdfStoragePath(new Date(order.created_at));
+    const uploadResult = await uploadExamPdf(admin, storagePath, pdfBytes);
 
-  const uploadResult = await uploadExamPdf(admin, storagePath, pdfBytes);
-  if (!uploadResult.ok) {
-    console.error("[submitExamOrderAction] pdf upload", uploadResult.error);
-  } else {
-    await admin.from("exam_orders").update({ pdf_storage_path: storagePath }).eq("id", order.id);
+    if (!uploadResult.ok) {
+      throw new Error(uploadResult.error);
+    }
+
+    // ── Success path ────────────────────────────────────────────────────────
+    await admin
+      .from("exam_orders")
+      .update({
+        pdf_storage_path: storagePath,
+        pdf_generated_at: new Date().toISOString(),
+        pdf_generation_failed: false,
+        pdf_generation_error: null,
+      })
+      .eq("id", order.id);
+
+    pdfStoragePath = storagePath;
+
+    // Create admin notification immediately — PDF is ready.
+    // Wrapped in its own try/catch so a notification failure never blocks the response.
+    try {
+      await admin.from("notifications").insert({
+        title: "New Exam Order",
+        message: `A new exam order (${order.order_number}) was submitted by ${order.school_name}.`,
+        type: "exam_order",
+        metadata: {
+          order_id: order.id,
+          order_number: order.order_number,
+          school_name: order.school_name,
+          total_amount: order.total_amount,
+          total_papers: order.total_papers,
+        },
+        is_read: false,
+      });
+    } catch (notifErr) {
+      console.error("[submitExamOrderAction] failed to create notification", notifErr);
+    }
+  } catch (pdfErr: unknown) {
+    // ── Failure path ────────────────────────────────────────────────────────
+    const errMsg = pdfErr instanceof Error ? pdfErr.message : String(pdfErr);
+    console.error("[submitExamOrderAction] synchronous PDF generation failed:", errMsg);
+
+    pdfGenerationFailed = true;
+
+    // Record failure state so the dashboard and download endpoint reflect it.
+    try {
+      await admin
+        .from("exam_orders")
+        .update({
+          pdf_generation_failed: true,
+          pdf_generation_error: errMsg,
+          pdf_generation_attempts: (order.pdf_generation_attempts || 0) + 1,
+          last_pdf_attempt_at: new Date().toISOString(),
+        })
+        .eq("id", order.id);
+    } catch (dbErr) {
+      console.error("[submitExamOrderAction] failed to record PDF failure in DB", dbErr);
+    }
+
+    // Emit Inngest event so the durable recovery worker picks it up and retries.
+    // Do NOT create a notification here — the worker will create it after successful recovery.
+    try {
+      await inngest.send({
+        name: "exam/order.created",
+        data: { orderId: order.id },
+      });
+    } catch (inngestErr) {
+      console.error("[submitExamOrderAction] failed to emit Inngest event", inngestErr);
+    }
   }
 
   revalidatePath("/dashboard/orders");
@@ -188,6 +258,8 @@ export async function submitExamOrderAction(
     schoolName: validated.data.schoolName,
     totalAmount: validated.data.totalAmount,
     totalPapers: validated.data.totalPapers,
+    pdfStoragePath,
+    pdfGenerationFailed,
   };
 }
 
@@ -242,9 +314,11 @@ export type LookupOrderState =
       totalPapers: number;
       totalAmount: number;
       statusLabel: string;
-      items: any[];
+      items: ExamOrderItem[];
       downloadToken: string;
       whatsappUrl: string;
+      pdfStoragePath: string | null;
+      pdfGenerationFailed: boolean;
     };
 
 function normalizePhone(p: string): string {
@@ -253,7 +327,7 @@ function normalizePhone(p: string): string {
 }
 
 export async function lookupOrderAction(
-  _prev: any,
+  _prev: LookupOrderState,
   formData: FormData,
 ): Promise<LookupOrderState> {
   const orderNumber = formData.get("order_number")?.toString().trim();
@@ -317,7 +391,7 @@ export async function lookupOrderAction(
     totalPapers: examOrder.total_papers,
     totalAmount: Number(examOrder.total_amount),
     statusLabel: examOrder.status,
-    items: examOrder.items as any[],
+    items: examOrder.items as unknown as ExamOrderItem[],
     downloadToken,
     whatsappUrl: createExamOrderWhatsAppLink({
       orderNumber: examOrder.order_number,
@@ -330,7 +404,62 @@ export async function lookupOrderAction(
       totalPapers: examOrder.total_papers,
       totalAmount: Number(examOrder.total_amount),
       additionalNotes: examOrder.additional_notes,
-      items: examOrder.items as any[],
+      items: examOrder.items as unknown as import("@/lib/exams/types").ExamOrderItem[],
     }),
+    pdfStoragePath: examOrder.pdf_storage_path,
+    pdfGenerationFailed: examOrder.pdf_generation_failed || false,
   };
+}
+
+export async function checkPdfStatusAction(
+  orderNumber: string,
+  phone: string
+): Promise<{ pdfStoragePath: string | null; pdfGenerationFailed: boolean }> {
+  const admin = createServiceRoleClient();
+  if (!admin) return { pdfStoragePath: null, pdfGenerationFailed: false };
+
+  const { data, error } = await admin
+    .from("exam_orders")
+    .select("pdf_storage_path, pdf_generation_failed")
+    .eq("order_number", orderNumber)
+    .eq("phone", phone)
+    .maybeSingle();
+
+  if (error || !data) {
+    return { pdfStoragePath: null, pdfGenerationFailed: false };
+  }
+
+  return {
+    pdfStoragePath: data.pdf_storage_path,
+    pdfGenerationFailed: data.pdf_generation_failed,
+  };
+}
+
+function compareOrderItems(itemsA: unknown, itemsB: unknown): boolean {
+  if (!Array.isArray(itemsA) || !Array.isArray(itemsB)) return false;
+  if (itemsA.length !== itemsB.length) return false;
+
+  const mapA = new Map<string, number>();
+  for (const item of itemsA) {
+    if (item && typeof item === "object" && "class_key" in item) {
+      const classKey = (item as { class_key: unknown }).class_key;
+      const quantity = (item as { quantity: unknown }).quantity;
+      if (classKey) {
+        mapA.set(String(classKey), Number(quantity || 0));
+      }
+    }
+  }
+
+  for (const item of itemsB) {
+    if (!item || typeof item !== "object" || !("class_key" in item)) return false;
+    const classKey = (item as { class_key: unknown }).class_key;
+    const quantity = (item as { quantity: unknown }).quantity;
+    if (!classKey) return false;
+    const qtyA = mapA.get(String(classKey));
+    if (qtyA === undefined || qtyA !== Number(quantity || 0)) {
+      return false;
+    }
+  }
+
+  return true;
 }
