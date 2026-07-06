@@ -3,8 +3,8 @@
 export type ProductFormState = { error: string | null; success?: boolean };
 export const productFormInitialState: ProductFormState = { error: null, success: false };
 
-export type CategoryFormState = { error: string | null };
-export const categoryFormInitialState: CategoryFormState = { error: null };
+export type CategoryFormState = { error: string | null; success?: boolean };
+export const categoryFormInitialState: CategoryFormState = { error: null, success: false };
 
 export type TestimonialFormState = { error: string | null };
 export const testimonialFormInitialState: TestimonialFormState = { error: null };

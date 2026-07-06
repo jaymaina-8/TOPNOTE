@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-import { AdminNav } from "@/components/admin/AdminNav";
 import { AccessDenied } from "@/components/dashboard/AccessDenied";
 import { NotificationProvider } from "@/components/admin/NotificationProvider";
+import { DashboardLayoutClient } from "@/components/admin/DashboardLayoutClient";
 import { getDashboardAuth } from "@/lib/auth/dashboard-access";
 
 export const metadata: Metadata = {
@@ -35,11 +35,11 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#f6f7f9] text-neutral-900">
-      <NotificationProvider>
-        <AdminNav />
-        <div className="mx-auto max-w-6xl px-4 py-7 sm:px-6 lg:px-8">{children}</div>
-      </NotificationProvider>
-    </div>
+    <NotificationProvider>
+      <DashboardLayoutClient userEmail={auth.email}>
+        {children}
+      </DashboardLayoutClient>
+    </NotificationProvider>
   );
 }
+

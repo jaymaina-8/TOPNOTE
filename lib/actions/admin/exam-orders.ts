@@ -73,3 +73,65 @@ export async function deleteExamOrderAction(formData: FormData): Promise<void> {
   revalidatePath("/dashboard/orders");
   redirect("/dashboard/orders");
 }
+
+export async function bulkUpdateExamOrderStatusAction(orderIds: string[], nextStatus: ExamOrderStatus): Promise<{ success: boolean; error?: string }> {
+  const allowed = await guardDashboardVoidMutation();
+  if (!allowed) return { success: false, error: "Unauthorized" };
+
+  const admin = createServiceRoleClient();
+  if (!admin) return { success: false, error: "Service role not configured" };
+
+  if (!orderIds.length) return { success: false, error: "No orders selected" };
+  if (!VALID_STATUSES.includes(nextStatus)) return { success: false, error: "Invalid status" };
+
+  const { error } = await admin
+    .from("exam_orders")
+    .update({ status: nextStatus })
+    .in("id", orderIds);
+
+  if (error) {
+    console.error("[bulkUpdateExamOrderStatusAction]", error.message);
+    return { success: false, error: "Could not update orders status" };
+  }
+
+  revalidatePath("/dashboard/orders");
+  return { success: true };
+}
+
+export async function bulkDeleteExamOrdersAction(orderIds: string[]): Promise<{ success: boolean; error?: string }> {
+  const allowed = await guardDashboardVoidMutation();
+  if (!allowed) return { success: false, error: "Unauthorized" };
+
+  const admin = createServiceRoleClient();
+  if (!admin) return { success: false, error: "Service role not configured" };
+
+  if (!orderIds.length) return { success: false, error: "No orders selected" };
+
+  // Fetch all storage paths first to remove PDFs
+  const { data: orders } = await admin
+    .from("exam_orders")
+    .select("pdf_storage_path")
+    .in("id", orderIds);
+
+  const pdfPaths = (orders ?? [])
+    .map((o) => o.pdf_storage_path)
+    .filter((path): path is string => !!path);
+
+  if (pdfPaths.length) {
+    await admin.storage.from("exam-order-pdfs").remove(pdfPaths);
+  }
+
+  const { error } = await admin
+    .from("exam_orders")
+    .delete()
+    .in("id", orderIds);
+
+  if (error) {
+    console.error("[bulkDeleteExamOrdersAction]", error.message);
+    return { success: false, error: "Could not delete orders" };
+  }
+
+  revalidatePath("/dashboard/orders");
+  return { success: true };
+}
+

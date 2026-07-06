@@ -187,3 +187,54 @@ export async function deleteExamSessionAction(formData: FormData): Promise<void>
   revalidatePath("/exams");
   redirect("/dashboard/exams");
 }
+
+export async function duplicateExamSessionAction(sessionId: string): Promise<{ success: boolean; error?: string }> {
+  const denied = await guardDashboardFormMutation();
+  if (denied) return { success: false, error: denied.error };
+
+  const admin = createServiceRoleClient();
+  if (!admin) return { success: false, error: "Service role is not configured." };
+
+  const { data: origSession, error: sErr } = await admin
+    .from("exam_sessions")
+    .select("*, exam_session_prices(*)")
+    .eq("id", sessionId)
+    .maybeSingle();
+
+  if (sErr || !origSession) return { success: false, error: "Could not find original session." };
+
+  const name = `${origSession.name} (Copy)`;
+  const slug = slugifyName(name);
+
+  const { data: newSession, error: insertError } = await admin
+    .from("exam_sessions")
+    .insert({ name, slug, status: "draft" })
+    .select("id")
+    .single();
+
+  if (insertError || !newSession) {
+    if (insertError?.code === "23505") return { success: false, error: "A session with that slug already exists." };
+    console.error("[duplicateExamSessionAction]", insertError?.message);
+    return { success: false, error: "Could not duplicate session." };
+  }
+
+  const prices = origSession.exam_session_prices ?? [];
+  if (prices.length > 0) {
+    const newPrices = prices.map((p: any) => ({
+      session_id: newSession.id,
+      class_key: p.class_key,
+      price: p.price,
+    }));
+
+    const { error: pricesError } = await admin.from("exam_session_prices").insert(newPrices);
+    if (pricesError) {
+      console.error("[duplicateExamSessionAction] prices", pricesError.message);
+      await admin.from("exam_sessions").delete().eq("id", newSession.id);
+      return { success: false, error: "Could not copy pricing details." };
+    }
+  }
+
+  revalidatePath("/dashboard/exams");
+  revalidatePath("/exams");
+  return { success: true };
+}

@@ -207,3 +207,72 @@ export async function deleteProductAction(formData: FormData): Promise<void> {
   revalidatePath("/");
   redirect("/dashboard/products");
 }
+
+export async function toggleProductFeaturedAction(productId: string, currentFeatured: boolean): Promise<{ success: boolean; error?: string }> {
+  const denied = await guardDashboardFormMutation();
+  if (denied) return { success: false, error: denied.error };
+  const admin = createServiceRoleClient();
+  if (!admin) return { success: false, error: "Service role not configured." };
+
+  const { error } = await admin
+    .from("products")
+    .update({ is_featured: !currentFeatured })
+    .eq("id", productId);
+
+  if (error) {
+    console.error("[toggleProductFeaturedAction]", error.message);
+    return { success: false, error: "Could not toggle featured state." };
+  }
+
+  revalidatePath("/dashboard/products");
+  revalidatePath("/products");
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function updateProductPriceAction(productId: string, price: number): Promise<{ success: boolean; error?: string }> {
+  const denied = await guardDashboardFormMutation();
+  if (denied) return { success: false, error: denied.error };
+  const admin = createServiceRoleClient();
+  if (!admin) return { success: false, error: "Service role not configured." };
+  if (price < 0) return { success: false, error: "Price must be non-negative." };
+
+  const { error } = await admin
+    .from("products")
+    .update({ price })
+    .eq("id", productId);
+
+  if (error) {
+    console.error("[updateProductPriceAction]", error.message);
+    return { success: false, error: "Could not update price." };
+  }
+
+  revalidatePath("/dashboard/products");
+  revalidatePath("/products");
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function deleteMultipleProductsAction(productIds: string[]): Promise<{ success: boolean; error?: string }> {
+  const denied = await guardDashboardFormMutation();
+  if (denied) return { success: false, error: denied.error };
+  const admin = createServiceRoleClient();
+  if (!admin) return { success: false, error: "Service role not configured." };
+  if (!productIds.length) return { success: false, error: "No products selected." };
+
+  const { error } = await admin
+    .from("products")
+    .delete()
+    .in("id", productIds);
+
+  if (error) {
+    console.error("[deleteMultipleProductsAction]", error.message);
+    return { success: false, error: "Could not delete products." };
+  }
+
+  revalidatePath("/dashboard/products");
+  revalidatePath("/products");
+  revalidatePath("/");
+  return { success: true };
+}
+

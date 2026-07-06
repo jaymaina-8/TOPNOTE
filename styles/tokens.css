@@ -1,24 +1,63 @@
 /**
  * Design tokens — TOPNOTE PUBLISHERS
- * Primary (#E11D2E); green reserved for savings / positive confirmation.
+ * Extended semantic tokens for enterprise SaaS look & feel and future dark mode support.
  */
 :root {
+  /* Brand colors */
   --brand-primary: #d41224;
   --brand-primary-deep: #7f0712;
+  --brand-primary-hover: #b80d1b;
   --brand-primary-soft: #fff1f2;
   --brand-primary-foreground: #ffffff;
-  --surface-page: #ffffff;
-  --surface-muted: #fff7f7;
+
+  /* Surfaces */
+  --surface-page: #fafafa;
+  --surface-card: #ffffff;
+  --surface-muted: #f4f4f5;
   --surface-elevated: #ffffff;
-  --foreground: #171717;
-  --foreground-muted: #525252;
-  --foreground-subtle: #737373;
-  --border: rgba(23, 23, 23, 0.1);
-  --border-subtle: var(--border);
-  --semantic-positive: #15803d;
+  --surface-overlay: #ffffff;
+
+  /* Foreground text colors */
+  --foreground: #18181b;
+  --foreground-muted: #52525b;
+  --foreground-subtle: #71717a;
+  --foreground-on-brand: #ffffff;
+
+  /* Borders */
+  --border: #e4e4e7;
+  --border-subtle: #f4f4f5;
+  --border-hover: #d4d4d8;
+  --border-focus: #d41224;
+
+  /* Semantic status colors */
+  --semantic-positive: #16a34a;
   --semantic-positive-muted: #f0fdf4;
-  --semantic-positive-border: rgba(22, 163, 74, 0.22);
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05), 0 10px 30px rgba(127, 7, 18, 0.035);
-  --shadow-md: 0 12px 30px rgba(15, 23, 42, 0.08), 0 2px 8px rgba(127, 7, 18, 0.05);
-  --shadow-premium: 0 24px 70px rgba(127, 7, 18, 0.16), 0 8px 24px rgba(15, 23, 42, 0.08);
+  --semantic-positive-border: #bbf7d0;
+
+  --semantic-warning: #ea580c;
+  --semantic-warning-muted: #fff7ed;
+  --semantic-warning-border: #ffedd5;
+
+  --semantic-negative: #dc2626;
+  --semantic-negative-muted: #fef2f2;
+  --semantic-negative-border: #fee2e2;
+
+  --semantic-info: #0284c7;
+  --semantic-info-muted: #f0f9ff;
+  --semantic-info-border: #e0f2fe;
+
+  /* Elevation Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.08);
+  --shadow-premium: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+
+  /* Border Radii */
+  --radius-sm: 0.375rem; /* 6px */
+  --radius-md: 0.5rem;   /* 8px */
+  --radius-lg: 0.75rem;  /* 12px */
+  --radius-xl: 1rem;     /* 16px */
+
+  /* Animations & Transitions */
+  --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }

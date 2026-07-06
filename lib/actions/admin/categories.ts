@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -80,3 +80,43 @@ export async function deleteCategoryAction(formData: FormData): Promise<void> {
   revalidatePath("/");
   redirect("/dashboard/categories");
 }
+
+export async function updateCategoryAction(
+  _prev: CategoryFormState,
+  formData: FormData,
+): Promise<CategoryFormState> {
+  const denied = await guardDashboardFormMutation();
+  if (denied) return denied;
+  const admin = createServiceRoleClient();
+  if (!admin) return { error: "Service role is not configured on this server." };
+
+  const id = parseRequiredString(formData, "id");
+  const name = parseRequiredString(formData, "name");
+  const slug = parseRequiredString(formData, "slug");
+  const typeRaw = parseRequiredString(formData, "type");
+
+  if (!id || !UUID_RE.test(id)) return { error: "Invalid category ID." };
+  if (!name) return { error: "Name is required." };
+  if (!slug) return { error: "Slug is required." };
+  if (!SLUG_RE.test(slug)) return { error: "Slug must be lowercase letters, digits, and single hyphens only." };
+  if (!typeRaw || !isCategoryType(typeRaw)) return { error: "Choose a valid type." };
+
+  const type = typeRaw as CategoryType;
+
+  const { error: updateError } = await admin
+    .from("categories")
+    .update({ name, slug, type })
+    .eq("id", id);
+
+  if (updateError) {
+    if (updateError.code === "23505") return { error: "A category with that slug already exists." };
+    console.error("[updateCategoryAction]", updateError.message);
+    return { error: "Could not update category." };
+  }
+
+  revalidatePath("/dashboard/categories");
+  revalidatePath("/products");
+  revalidatePath("/");
+  return { error: null, success: true };
+}
+
