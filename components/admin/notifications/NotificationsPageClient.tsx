@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { useSearchParams } from "next/navigation";
 import { useNotifications, type Notification } from "@/components/admin/NotificationProvider";
 import { NotificationFilters, type FilterType, type FilterCounts } from "./NotificationFilters";
 import { NotificationTimelineRow } from "./NotificationTimelineRow";
@@ -12,25 +13,38 @@ import { NotificationPreferences } from "./NotificationPreferences";
    Date grouping
 ───────────────────────────────────────────── */
 
-type DateGroup = "Today" | "Yesterday" | "Earlier This Week" | "Earlier This Month" | "Older";
-const GROUP_ORDER: DateGroup[] = ["Today", "Yesterday", "Earlier This Week", "Earlier This Month", "Older"];
+type DateGroup = "Today" | "Yesterday" | "Earlier This Week" | "Last Week" | "Earlier This Month" | "Older";
+const GROUP_ORDER: DateGroup[] = ["Today", "Yesterday", "Earlier This Week", "Last Week", "Earlier This Month", "Older"];
 
 function getDateGroup(isoString: string): DateGroup {
   const now = new Date();
-  const todayStart  = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  
+  // Today start
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  
+  // Yesterday start
   const yesterdayStart = new Date(todayStart);
   yesterdayStart.setDate(yesterdayStart.getDate() - 1);
-  const weekStart = new Date(todayStart);
-  weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  
+  // Start of this week (Sunday)
+  const thisWeekStart = new Date(todayStart);
+  thisWeekStart.setDate(thisWeekStart.getDate() - thisWeekStart.getDay());
+  
+  // Start of last week (7 days before Sunday of this week)
+  const lastWeekStart = new Date(thisWeekStart);
+  lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+  
+  // Start of this month
+  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
   const d = new Date(isoString);
-  const dDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const dTime = d.getTime();
 
-  if (dDay >= todayStart) return "Today";
-  if (dDay >= yesterdayStart) return "Yesterday";
-  if (dDay >= weekStart) return "Earlier This Week";
-  if (dDay >= monthStart) return "Earlier This Month";
+  if (dTime >= todayStart.getTime()) return "Today";
+  if (dTime >= yesterdayStart.getTime()) return "Yesterday";
+  if (dTime >= thisWeekStart.getTime()) return "Earlier This Week";
+  if (dTime >= lastWeekStart.getTime()) return "Last Week";
+  if (dTime >= thisMonthStart.getTime()) return "Earlier This Month";
   return "Older";
 }
 
@@ -74,7 +88,9 @@ export function NotificationsPageClient() {
   } = useNotifications();
 
   /* ── Local UI state ── */
-  const [activeFilter, setActiveFilter] = useState<FilterType>("all");
+  const searchParams = useSearchParams();
+  const initialFilter = (searchParams?.get("filter") as FilterType) || "all";
+  const [activeFilter, setActiveFilter] = useState<FilterType>(initialFilter);
   const [searchQuery, setSearchQuery]   = useState("");
   const [selectedIds, setSelectedIds]   = useState<Set<string>>(new Set());
   const [displayCount, setDisplayCount] = useState(25);
@@ -405,16 +421,16 @@ export function NotificationsPageClient() {
       {/* ═══ TIMELINE LIST ═══ */}
       <div
         id="notification-timeline"
-        role="table"
         aria-label="Notifications list"
-        className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm"
+        className="space-y-6"
       >
         {isLoading ? (
-          // Skeleton
-          Array.from({ length: 7 }).map((_, i) => <SkeletonRow key={i} />)
+          <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+            {Array.from({ length: 7 }).map((_, i) => <SkeletonRow key={i} />)}
+          </div>
         ) : visibleItems.length === 0 ? (
           // Empty state
-          <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
+          <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm flex flex-col items-center justify-center px-8 py-20 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-400">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-8 w-8">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
@@ -437,29 +453,31 @@ export function NotificationsPageClient() {
         ) : (
           // Timeline groups
           groupedItems.map(([group, items]) => (
-            <div key={group} role="rowgroup">
-              {/* Group header */}
-              <div className="sticky top-[57px] z-10 flex items-center gap-3 border-b border-neutral-100 bg-neutral-50/90 px-4 py-2 backdrop-blur-sm">
-                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">
+            <div key={group} className="space-y-2.5">
+              {/* Group header (renders outside individual card blocks) */}
+              <div className="flex items-center gap-3 px-1 py-1">
+                <span className="text-[10.5px] font-black uppercase tracking-widest text-[#E31B23]">
                   {group}
                 </span>
                 <div className="h-px flex-1 bg-neutral-200" />
-                <span className="text-[10px] font-semibold text-neutral-400">{items.length}</span>
+                <span className="text-[10px] font-bold text-neutral-400">{items.length}</span>
               </div>
 
-              {/* Rows */}
-              {items.map((n) => (
-                <NotificationTimelineRow
-                  key={n.id}
-                  notification={n}
-                  isSelected={selectedIds.has(n.id)}
-                  isNew={n.id === latestInsertedId}
-                  onCheckboxChange={handleCheckboxChange}
-                  onRowClick={(id) => setActiveNotifId(id)}
-                  onMarkAsRead={markAsRead}
-                  onDelete={deleteNotification}
-                />
-              ))}
+              {/* Rows Card container */}
+              <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm divide-y divide-neutral-100">
+                {items.map((n) => (
+                  <NotificationTimelineRow
+                    key={n.id}
+                    notification={n}
+                    isSelected={selectedIds.has(n.id)}
+                    isNew={n.id === latestInsertedId}
+                    onCheckboxChange={handleCheckboxChange}
+                    onRowClick={(id) => setActiveNotifId(id)}
+                    onMarkAsRead={markAsRead}
+                    onDelete={deleteNotification}
+                  />
+                ))}
+              </div>
             </div>
           ))
         )}

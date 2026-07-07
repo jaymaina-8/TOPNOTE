@@ -7,7 +7,7 @@ export type SearchResultItem = {
   id: string;
   title: string;
   subtitle?: string;
-  type: "product" | "order" | "category" | "session";
+  type: "product" | "order" | "category" | "session" | "notification" | "school";
   href: string;
 };
 
@@ -22,7 +22,7 @@ export async function globalSearchAction(query: string): Promise<SearchResultIte
   const q = `%${query.trim()}%`;
 
   try {
-    const [productsRes, ordersRes, sessionsRes, categoriesRes] = await Promise.all([
+    const [productsRes, ordersRes, sessionsRes, categoriesRes, notificationsRes] = await Promise.all([
       admin
         .from("products")
         .select("id, name, slug, price")
@@ -32,7 +32,7 @@ export async function globalSearchAction(query: string): Promise<SearchResultIte
         .from("exam_orders")
         .select("id, order_number, school_name, phone, status")
         .or(`order_number.ilike.${q},school_name.ilike.${q},phone.ilike.${q},contact_person.ilike.${q}`)
-        .limit(5),
+        .limit(15),
       admin
         .from("exam_sessions")
         .select("id, name, slug")
@@ -42,6 +42,11 @@ export async function globalSearchAction(query: string): Promise<SearchResultIte
         .from("categories")
         .select("id, name, slug, type")
         .ilike("name", q)
+        .limit(5),
+      admin
+        .from("notifications")
+        .select("id, title, message, type")
+        .or(`title.ilike.${q},message.ilike.${q}`)
         .limit(5),
     ]);
 
@@ -68,7 +73,7 @@ export async function globalSearchAction(query: string): Promise<SearchResultIte
           title: o.order_number,
           subtitle: `${o.school_name} (${o.status})`,
           type: "order",
-          href: `/dashboard/orders`,
+          href: `/dashboard/orders?search=${encodeURIComponent(o.order_number)}`,
         });
       });
     }
@@ -98,6 +103,39 @@ export async function globalSearchAction(query: string): Promise<SearchResultIte
         });
       });
     }
+
+    // Notifications
+    if (notificationsRes.data) {
+      notificationsRes.data.forEach((n) => {
+        results.push({
+          id: n.id,
+          title: n.title,
+          subtitle: `Notification (${n.type})`,
+          type: "notification",
+          href: `/dashboard/notifications`,
+        });
+      });
+    }
+
+    // Distinct School Names mapping
+    const uniqueSchools = new Set<string>();
+    if (ordersRes.data) {
+      ordersRes.data.forEach((o) => {
+        if (o.school_name && o.school_name.toLowerCase().includes(query.trim().toLowerCase())) {
+          uniqueSchools.add(o.school_name.trim());
+        }
+      });
+    }
+
+    Array.from(uniqueSchools).slice(0, 5).forEach((school) => {
+      results.push({
+        id: `school-${school}`,
+        title: school,
+        subtitle: `School orders list`,
+        type: "school",
+        href: `/dashboard/orders?search=${encodeURIComponent(school)}`,
+      });
+    });
 
     return results;
   } catch (err) {

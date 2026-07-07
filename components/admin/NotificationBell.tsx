@@ -1,14 +1,23 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useNotifications } from "./NotificationProvider";
 import { BellPreview } from "./notifications/BellPreview";
 import { NotificationToast } from "./notifications/NotificationToast";
 
-export function NotificationBell() {
+interface NotificationBellProps {
+  notificationsOpen?: boolean;
+  setNotificationsOpen?: (open: boolean) => void;
+}
+
+export function NotificationBell({
+  notificationsOpen: propOpen,
+  setNotificationsOpen: propSetOpen,
+}: NotificationBellProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const {
     unreadCount,
     isShaking,
@@ -17,30 +26,40 @@ export function NotificationBell() {
     notifications,
     markAsRead,
     deleteNotification,
+    markAllAsRead,
   } = useNotifications();
 
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  // Controlled state from parent with uncontrolled local state fallback for legacy compatibility
+  const [localOpen, setLocalOpen] = useState(false);
+  const notificationsOpen = propOpen !== undefined ? propOpen : localOpen;
+  const setNotificationsOpen = propSetOpen !== undefined ? propSetOpen : setLocalOpen;
+
   const bellButtonRef = useRef<HTMLButtonElement>(null);
-  const prevIsOpenRef = useRef(isPreviewOpen);
+  const prevIsOpenRef = useRef(notificationsOpen);
 
   // Restore focus to bell when preview closes
   useEffect(() => {
-    if (prevIsOpenRef.current === true && isPreviewOpen === false) {
+    if (prevIsOpenRef.current === true && notificationsOpen === false) {
       setTimeout(() => bellButtonRef.current?.focus(), 50);
     }
-    prevIsOpenRef.current = isPreviewOpen;
-  }, [isPreviewOpen]);
+    prevIsOpenRef.current = notificationsOpen;
+  }, [notificationsOpen]);
+
+  // Close sheet on route changes (fallback logic for legacy nav pages without prop state)
+  useEffect(() => {
+    if (propOpen === undefined) {
+      setLocalOpen(false);
+    }
+  }, [pathname, propOpen]);
 
   const activeToast = toastQueue[0] ?? null;
 
   /* ── Toast action handlers ── */
 
-  /** Dismiss: hide popup only. Notification stays unread in the center. */
   const handleToastDismiss = () => {
     dismissToast();
   };
 
-  /** Mark as Read: mark the notification + close popup. */
   const handleToastMarkAsRead = async () => {
     if (activeToast) {
       await markAsRead(activeToast.id);
@@ -48,10 +67,6 @@ export function NotificationBell() {
     dismissToast();
   };
 
-  /**
-   * View Order: mark as read + navigate to orders + close popup.
-   * markAsRead is fire-and-forget here; navigation is more important to feel instant.
-   */
   const handleToastViewOrder = () => {
     if (activeToast) {
       markAsRead(activeToast.id).catch(() => {});
@@ -67,15 +82,15 @@ export function NotificationBell() {
       <button
         ref={bellButtonRef}
         id="notification-bell-btn"
-        onClick={() => setIsPreviewOpen((o) => !o)}
+        onClick={() => setNotificationsOpen(!notificationsOpen)}
         className={cn(
           "relative rounded-lg p-2 text-neutral-600 transition-all hover:bg-neutral-100 hover:text-neutral-950",
           "focus:outline-none focus:ring-2 focus:ring-primary/20",
-          isPreviewOpen && "bg-neutral-100 text-neutral-950",
+          notificationsOpen && "bg-neutral-100 text-neutral-950",
           isShaking && "animate-bell-shake"
         )}
         aria-label="View notifications"
-        aria-expanded={isPreviewOpen}
+        aria-expanded={notificationsOpen}
         aria-haspopup="true"
       >
         <svg
@@ -105,16 +120,17 @@ export function NotificationBell() {
         )}
       </button>
 
-      {/* ── 350px preview dropdown ── */}
       <BellPreview
-        isOpen={isPreviewOpen}
-        onClose={() => setIsPreviewOpen(false)}
+        notificationsOpen={notificationsOpen}
+        onClose={() => setNotificationsOpen(false)}
         notifications={notifications}
         onMarkAsRead={markAsRead}
         onDelete={deleteNotification}
+        onMarkAllAsRead={markAllAsRead}
+        forceDesktop={true}
       />
 
-      {/* ── Centered modal popup — never auto-dismisses ── */}
+      {/* ── Centered modal popup ── */}
       <NotificationToast
         toast={activeToast}
         queueLength={Math.max(0, toastQueue.length - 1)}

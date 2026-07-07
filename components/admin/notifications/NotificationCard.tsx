@@ -271,7 +271,10 @@ export function NotificationCard({
 
         {/* Title and message */}
         <div>
-          <h4 className="text-[13px] font-black tracking-tight text-neutral-900 leading-snug">
+          <h4 className={cn(
+            "text-[13px] tracking-tight leading-snug",
+            !is_read ? "font-extrabold text-neutral-900" : "font-normal text-neutral-600"
+          )}>
             {title}
           </h4>
           <p className="mt-0.5 text-[12px] text-neutral-500 font-medium leading-relaxed">

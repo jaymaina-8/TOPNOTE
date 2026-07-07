@@ -88,8 +88,16 @@ export default async function DashboardInquiriesPage() {
         ) : null}
 
         {result.ok && result.inquiries.length === 0 ? (
-          <div className="mt-8 rounded-xl border border-neutral-200/80 bg-neutral-50 px-4 py-6 text-center text-sm text-neutral-600">
-            No inquiries yet.
+          <div className="mt-8 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm flex flex-col items-center justify-center px-8 py-20 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-400">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-8 w-8">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 0 1 2.008 1.24l.885 1.77a2.25 2.25 0 0 0 2.007 1.24h1.98a2.25 2.25 0 0 0 2.007-1.24l.885-1.77a2.25 2.25 0 0 1 2.007-1.24h3.86m-18 0h18" />
+              </svg>
+            </div>
+            <h3 className="mt-4 text-sm font-black text-neutral-900">Inbox is empty</h3>
+            <p className="mt-1.5 text-xs text-neutral-500 max-w-[240px]">
+              No customer inquiries or conversion logs found in the system.
+            </p>
           </div>
         ) : null}
 

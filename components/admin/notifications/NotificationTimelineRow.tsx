@@ -242,7 +242,7 @@ export function NotificationTimelineRow({
         {/* Title */}
         <p className={cn(
           "mt-0.5 text-sm leading-snug",
-          !is_read ? "font-black text-neutral-900" : "font-semibold text-neutral-700"
+          !is_read ? "font-extrabold text-neutral-900" : "font-normal text-neutral-600"
         )}>
           {title}
         </p>

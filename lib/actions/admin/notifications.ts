@@ -91,3 +91,34 @@ export async function deleteAllReadNotificationsAction(ids: string[]): Promise<{
   revalidatePath("/dashboard");
   return { success: true };
 }
+
+export async function createAdminNotificationAction({
+  title,
+  message,
+  type,
+}: {
+  title: string;
+  message: string;
+  type: "system" | "warning";
+}): Promise<{ success: boolean; error?: string }> {
+  const allowed = await guardDashboardVoidMutation();
+  if (!allowed) return { success: false, error: "Unauthorized" };
+
+  const admin = createServiceRoleClient();
+  if (!admin) return { success: false, error: "Database client error" };
+
+  const { error } = await admin.from("notifications").insert({
+    title,
+    message,
+    type,
+    is_read: false,
+  });
+
+  if (error) {
+    console.error("[createAdminNotificationAction] error:", error.message);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath("/dashboard");
+  return { success: true };
+}

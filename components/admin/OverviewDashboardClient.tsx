@@ -69,6 +69,7 @@ interface StatCardProps {
   trendText?: string;
   icon: React.ReactNode;
   tone: "red" | "green" | "amber" | "blue" | "neutral";
+  href?: string;
 }
 
 function StatCard({
@@ -80,6 +81,7 @@ function StatCard({
   trendText,
   icon,
   tone,
+  href,
 }: StatCardProps) {
   const toneMap = {
     red: "bg-red-50 text-[#E31B23] border-red-100 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/30",
@@ -94,8 +96,11 @@ function StatCard({
     return Math.round(((value - prevValue) / prevValue) * 100);
   }, [value, prevValue]);
 
-  return (
-    <div className="rounded-xl border border-[#ECECEC] bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+  const cardContent = (
+    <div className={cn(
+      "rounded-xl border border-[#ECECEC] bg-white p-4 shadow-sm transition-all duration-200",
+      href ? "hover:-translate-y-0.5 hover:shadow-md hover:border-neutral-300" : "hover:-translate-y-0.5 hover:shadow-md"
+    )}>
       <div className="flex items-center justify-between">
         <span className="text-[10px] font-black uppercase tracking-wider text-[#888888]">{label}</span>
         <div className={cn("flex h-7 w-7 items-center justify-center rounded-lg border", toneMap[tone])}>
@@ -124,6 +129,16 @@ function StatCard({
       </div>
     </div>
   );
+
+  if (href) {
+    return (
+      <Link href={href} className="block group focus:outline-none">
+        {cardContent}
+      </Link>
+    );
+  }
+
+  return cardContent;
 }
 
 interface OverviewDashboardClientProps {
@@ -240,6 +255,7 @@ export function OverviewDashboardClient({ stats, recentActivity, recentOrders }:
             isCurrency={true}
             sparklinePoints={[stats.yesterdayRevenue * 0.4, stats.yesterdayRevenue * 0.7, stats.yesterdayRevenue, stats.todayRevenue * 0.8, stats.todayRevenue]}
             tone="green"
+            href="/dashboard/analytics"
             icon={
               <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -254,6 +270,7 @@ export function OverviewDashboardClient({ stats, recentActivity, recentOrders }:
             prevValue={stats.yesterdayOrders}
             sparklinePoints={[stats.yesterdayOrders * 0.5, stats.yesterdayOrders * 0.9, stats.yesterdayOrders, stats.todayOrders * 0.7, stats.todayOrders]}
             tone="blue"
+            href="/dashboard/orders"
             icon={
               <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -268,6 +285,7 @@ export function OverviewDashboardClient({ stats, recentActivity, recentOrders }:
             trendText="requires processing"
             sparklinePoints={[2, 4, stats.pendingOrders * 0.8, stats.pendingOrders * 0.9, stats.pendingOrders]}
             tone="amber"
+            href="/dashboard/orders?status=pending"
             icon={
               <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -296,6 +314,7 @@ export function OverviewDashboardClient({ stats, recentActivity, recentOrders }:
             trendText="critical errors"
             sparklinePoints={[0, stats.pdfFailures * 0.5, stats.pdfFailures]}
             tone={stats.pdfFailures > 0 ? "red" : "neutral"}
+            href="/dashboard/orders?search=failed"
             icon={
               <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -310,6 +329,7 @@ export function OverviewDashboardClient({ stats, recentActivity, recentOrders }:
             trendText="awaiting follow-up"
             sparklinePoints={[stats.openInquiries * 1.2, stats.openInquiries * 1.1, stats.openInquiries]}
             tone={stats.openInquiries > 0 ? "red" : "neutral"}
+            href="/dashboard/inquiries"
             icon={
               <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -354,6 +374,7 @@ export function OverviewDashboardClient({ stats, recentActivity, recentOrders }:
             trendText="live ordering setups"
             sparklinePoints={[0, stats.activeSessions]}
             tone="blue"
+            href="/dashboard/exams"
             icon={
               <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -368,6 +389,7 @@ export function OverviewDashboardClient({ stats, recentActivity, recentOrders }:
             trendText="system notifications"
             sparklinePoints={[stats.unreadNotifications * 1.5, stats.unreadNotifications]}
             tone={stats.unreadNotifications > 0 ? "red" : "neutral"}
+            href="/dashboard/notifications?filter=unread"
             icon={
               <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
