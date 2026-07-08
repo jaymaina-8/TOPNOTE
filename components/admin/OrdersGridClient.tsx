@@ -1047,7 +1047,7 @@ export function OrdersGridClient({ initialOrders, sessions }: OrdersGridClientPr
           </div>
 
           {/* Mobile Card Grid View */}
-          <div className="grid gap-3.5 md:hidden">
+          <div className="hidden max-md:grid gap-3.5">
             {paginatedOrders.map((o) => (
               <div key={`m-${o.id}`} className="rounded-xl border border-[#ECECEC] bg-white p-4.5 shadow-sm space-y-3.5">
                 <div className="flex items-start justify-between">

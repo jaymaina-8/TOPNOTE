@@ -276,7 +276,7 @@ export function DashboardLayoutClient({ children, userEmail }: DashboardLayoutCl
           {/* Mobile hamburger menu */}
           <button
             onClick={() => setIsMobileMenuOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-[#555555] hover:bg-[#FAFAFA] hover:text-[#111111] md:hidden focus:outline-none"
+            className="hidden max-md:flex h-9 w-9 items-center justify-center rounded-lg text-[#555555] hover:bg-[#FAFAFA] hover:text-[#111111] focus:outline-none"
             aria-label="Open sidebar menu"
           >
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -515,7 +515,7 @@ export function DashboardLayoutClient({ children, userEmail }: DashboardLayoutCl
 
       {/* ── MOBILE SIDEBAR DRAWER OVERLAY ── */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-50 flex md:hidden">
+        <div className="fixed inset-0 z-50 hidden max-md:flex">
           {/* Backdrop click closer */}
           <div
             onClick={() => setIsMobileMenuOpen(false)}
@@ -586,7 +586,7 @@ export function DashboardLayoutClient({ children, userEmail }: DashboardLayoutCl
       )}
 
       {/* ── MOBILE BOTTOM NAVIGATION BAR ── */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 h-16 bg-white border-t border-[#ECECEC] flex items-center justify-around px-2 shadow-[0_-4px_10px_rgba(0,0,0,0.03)]">
+      <div className="hidden max-md:flex fixed bottom-0 left-0 right-0 z-40 h-16 bg-white border-t border-[#ECECEC] items-center justify-around px-2 shadow-[0_-4px_10px_rgba(0,0,0,0.03)]">
         <Link
           href="/dashboard"
           className={cn(
@@ -652,7 +652,7 @@ export function DashboardLayoutClient({ children, userEmail }: DashboardLayoutCl
       </div>
 
       {/* ── MOBILE FLOATING QUICK ACTION BUTTON ── */}
-      <div className="md:hidden fixed bottom-20 right-4 z-40" ref={fabRef}>
+      <div className="hidden max-md:block fixed bottom-20 right-4 z-40" ref={fabRef}>
         {isFabOpen && (
           <div className="flex flex-col items-end gap-2 mb-3 animate-in slide-in-from-bottom-5 duration-200">
             <Link

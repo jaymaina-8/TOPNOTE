@@ -399,7 +399,7 @@ export function ProductsGridClient({ initialProducts, categories }: ProductsGrid
       </div>
 
       {/* Mobile Card Grid */}
-      <div className="grid gap-3.5 md:hidden">
+      <div className="hidden max-md:grid gap-3.5">
         {paginatedProducts.map((p) => (
           <div key={`m-${p.id}`} className="rounded-xl border border-[#ECECEC] bg-white p-4.5 shadow-sm space-y-3">
             <div className="flex items-start justify-between">

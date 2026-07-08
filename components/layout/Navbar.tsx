@@ -79,7 +79,7 @@ export function Navbar() {
           </TrackedWhatsAppButton>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2 md:hidden">
+        <div className="hidden max-md:flex shrink-0 items-center gap-2">
           <Link
             href="/cart"
             aria-label="Cart"
@@ -106,7 +106,7 @@ export function Navbar() {
 
       <div
         className={cn(
-          "fixed inset-0 z-50 bg-neutral-950/30 backdrop-blur-[1px] transition-opacity md:hidden",
+          "fixed inset-0 z-50 bg-neutral-950/30 backdrop-blur-[1px] transition-opacity hidden max-md:block",
           open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
         )}
         aria-hidden={!open}

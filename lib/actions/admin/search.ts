@@ -60,7 +60,7 @@ export async function globalSearchAction(query: string): Promise<SearchResultIte
           title: p.name,
           subtitle: `KES ${p.price}`,
           type: "product",
-          href: `/dashboard/products`,
+          href: `/dashboard/products/${p.id}/edit`,
         });
       });
     }
